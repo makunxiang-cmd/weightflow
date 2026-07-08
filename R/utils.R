@@ -156,3 +156,12 @@
   out[as.integer(rownames(rs))] <- rs[, 1]
   out
 }
+
+#' Convert grouped sums to a named numeric vector.
+#'
+#' @param x One-dimensional grouped-sum result.
+#' @return A named numeric vector.
+#' @keywords internal
+.wf_margin_vector <- function(x) {
+  stats::setNames(as.numeric(x), names(x))
+}
