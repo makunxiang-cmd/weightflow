@@ -61,7 +61,7 @@ wf_target_population <- function(pop, key_map, count, dims,
     for (d in dvars) {
       v <- .chr(pop[[key_map[[d]]]][sel])
       m <- tapply(cnt[sel], v, sum)
-      margins[[d]] <- m[m > 0]
+      margins[[d]] <- .wf_margin_vector(m[m > 0])
     }
     groups[[g]] <- list(total = sum(cnt[sel]), margins = margins)
   }
@@ -166,7 +166,7 @@ wf_target_reference <- function(ref, feature, dims, by = NULL,
         ), "wf_error_input", list(group = g, dim = d))
       }
       m <- tapply(w[sel], v, sum)
-      m[m > 0]
+      .wf_margin_vector(m[m > 0])
     })
     names(margins) <- dvars
     groups[[g]] <- list(total = sum(w[sel]), margins = margins)
