@@ -1,0 +1,13 @@
+.DS_Store
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+.Rcheck/
+*.Rcheck/
+.codegraph/
+*.RData
+*.rdata
+*.xlsx
+private-data/
+tmp/
