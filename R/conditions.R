@@ -4,6 +4,7 @@
 #' @param class Primary condition class.
 #' @param data Machine-readable condition payload.
 #' @keywords internal
+#' @noRd
 wf_abort <- function(message, class, data = list()) {
   stop(structure(
     class = c(class, "wf_error", "error", "condition"),
@@ -17,6 +18,7 @@ wf_abort <- function(message, class, data = list()) {
 #' @param class Primary condition class.
 #' @param data Machine-readable condition payload.
 #' @keywords internal
+#' @noRd
 wf_warn <- function(message, class, data = list()) {
   warning(structure(
     class = c(class, "wf_warning", "warning", "condition"),

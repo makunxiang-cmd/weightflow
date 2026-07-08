@@ -3,6 +3,7 @@
 #' @param x Vector to normalize.
 #' @return A character vector.
 #' @keywords internal
+#' @noRd
 .chr <- function(x) {
   trimws(as.character(x))
 }
@@ -13,6 +14,7 @@
 #' @param cols Required column names.
 #' @param what Human-readable data source name.
 #' @keywords internal
+#' @noRd
 .require_cols <- function(df, cols, what) {
   miss <- setdiff(cols, names(df))
   if (length(miss) > 0) {
@@ -32,6 +34,7 @@
 #' @param groups Target groups.
 #' @param meta Provenance metadata.
 #' @keywords internal
+#' @noRd
 .wf_new_target <- function(mode, by, dims, groups, meta = list()) {
   tgt <- structure(
     list(mode = mode, by = by, dims = dims, groups = groups, meta = meta),
@@ -46,6 +49,7 @@
 #' @param tgt Target object.
 #' @param tol Relative tolerance.
 #' @keywords internal
+#' @noRd
 .wf_validate_target <- function(tgt, tol = 1e-8) {
   for (g in names(tgt$groups)) {
     gr <- tgt$groups[[g]]
@@ -92,6 +96,7 @@
 #' @param by Grouping variable name or `NULL`.
 #' @param by_key Optional group key column or function.
 #' @keywords internal
+#' @noRd
 .wf_group_keys <- function(df, by, by_key = NULL) {
   if (!is.null(by_key)) {
     if (is.function(by_key)) {
@@ -114,6 +119,7 @@
 #' @param sample_n Per-group sample sizes.
 #' @param totals Custom totals.
 #' @keywords internal
+#' @noRd
 .wf_scale_groups <- function(groups, scale, sample_n = NULL, totals = NULL) {
   if (scale == "population") {
     return(groups)
@@ -150,6 +156,7 @@
 #' @param idx Integer group indices.
 #' @param K Number of groups.
 #' @keywords internal
+#' @noRd
 .grp_sum <- function(w, idx, K) {
   out <- numeric(K)
   rs <- rowsum(w, idx)
@@ -162,6 +169,7 @@
 #' @param x One-dimensional grouped-sum result.
 #' @return A named numeric vector.
 #' @keywords internal
+#' @noRd
 .wf_margin_vector <- function(x) {
   stats::setNames(as.numeric(x), names(x))
 }

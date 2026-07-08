@@ -1,6 +1,9 @@
 root_file <- function(path) {
   candidates <- c(path, file.path("..", "..", path))
   existing <- candidates[file.exists(candidates)]
+  if (length(existing) == 0) {
+    testthat::skip(sprintf("%s is only available in the development checkout", path))
+  }
   normalizePath(existing[[1]], mustWork = TRUE)
 }
 

@@ -7,6 +7,7 @@
 #' @param severity Issue severity.
 #' @param detail Human-readable detail.
 #' @keywords internal
+#' @noRd
 .wf_issue <- function(group, dim, category, check, severity, detail) {
   data.frame(
     group = group,

@@ -9,3 +9,4 @@
 ^\.DS_Store$
 ^README\.zh-CN\.md$
 ^AGENTS\.md$
+^.*Rcheck$

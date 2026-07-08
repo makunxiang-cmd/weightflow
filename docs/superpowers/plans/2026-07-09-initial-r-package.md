@@ -10,37 +10,37 @@
 
 ---
 
-Repository root: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow`
+Repository root: `<repo>`
 
 ## File Structure
 
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/DESCRIPTION`: R package metadata.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/LICENSE`: MIT license metadata for R.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/.Rbuildignore`: package-build exclusions.
-- Modify `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/.gitignore`: keep current private data exclusions and add package build outputs.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/*.R`: implementation files split by responsibility.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/*.R`: package behavior tests.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat.R`: testthat entrypoint.
-- Move `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R包构建指导文件/weightflow_design.md` to `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/inst/design/weightflow_design.md`.
-- Move `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/原型核心代码/weightflow_core.R` to `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/inst/reference/weightflow_core.R`.
-- Move private source data from `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/测试用数据/` to `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/private-data/source/`.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/data-raw/make-weightflow-example.R`: reproducible simulated data generator.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/data/weightflow_example.rda`: generated simulated package data.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/README.md`: English project overview and example.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/README.zh-CN.md`: only Chinese-language repository file.
-- Create `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/AGENTS.md`: future-agent handoff.
+- Create `<repo>/DESCRIPTION`: R package metadata.
+- Create `<repo>/LICENSE`: MIT license metadata for R.
+- Create `<repo>/.Rbuildignore`: package-build exclusions.
+- Modify `<repo>/.gitignore`: keep current private data exclusions and add package build outputs.
+- Create `<repo>/R/*.R`: implementation files split by responsibility.
+- Create `<repo>/tests/testthat/*.R`: package behavior tests.
+- Create `<repo>/tests/testthat.R`: testthat entrypoint.
+- Move `<repo>/legacy-design-input/weightflow_design.md` to `<repo>/inst/design/weightflow_design.md`.
+- Move `<repo>/legacy-core-input/weightflow_core.R` to `<repo>/inst/reference/weightflow_core.R`.
+- Move private source data from `<repo>/legacy-private-data/` to `<repo>/private-data/source/`.
+- Create `<repo>/data-raw/make-weightflow-example.R`: reproducible simulated data generator.
+- Create `<repo>/data/weightflow_example.rda`: generated simulated package data.
+- Create `<repo>/README.md`: English project overview and example.
+- Create `<repo>/README.zh-CN.md`: only Chinese-language repository file.
+- Create `<repo>/AGENTS.md`: future-agent handoff.
 
 ### Task 1: Bootstrap Package Metadata And Safe Paths
 
 **Files:**
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/DESCRIPTION`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/LICENSE`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/.Rbuildignore`
-- Modify: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/.gitignore`
-- Move: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R包构建指导文件/weightflow_design.md`
-- Move: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/原型核心代码/weightflow_core.R`
-- Move: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/测试用数据/2022模拟数据.xlsx`
-- Move: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/测试用数据/weight_data_V4.0.RData`
+- Create: `<repo>/DESCRIPTION`
+- Create: `<repo>/LICENSE`
+- Create: `<repo>/.Rbuildignore`
+- Modify: `<repo>/.gitignore`
+- Move: `<repo>/legacy-design-input/weightflow_design.md`
+- Move: `<repo>/legacy-core-input/weightflow_core.R`
+- Move: `<repo>/legacy-private-data/2022-simulated-source.xlsx`
+- Move: `<repo>/legacy-private-data/weight_data_V4.0.RData`
 
 - [ ] **Step 1: Create package directories**
 
@@ -57,10 +57,10 @@ Expected: exit code 0.
 Run:
 
 ```bash
-mv R包构建指导文件/weightflow_design.md inst/design/weightflow_design.md
-mv 原型核心代码/weightflow_core.R inst/reference/weightflow_core.R
-mv 测试用数据/2022模拟数据.xlsx private-data/source/2022-simulated-source.xlsx
-mv 测试用数据/weight_data_V4.0.RData private-data/source/weight-data-v4-source.RData
+mv legacy-design-input/weightflow_design.md inst/design/weightflow_design.md
+mv legacy-core-input/weightflow_core.R inst/reference/weightflow_core.R
+mv legacy-private-data/2022-simulated-source.xlsx private-data/source/2022-simulated-source.xlsx
+mv legacy-private-data/weight_data_V4.0.RData private-data/source/weight-data-v4-source.RData
 ```
 
 Expected: exit code 0 and all source materials remain recoverable under English paths.
@@ -149,12 +149,12 @@ Expected: commit succeeds and no private data is included.
 ### Task 2: Write Failing Tests For Core Package Behavior
 
 **Files:**
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/helper-fixtures.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-dims-target.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-precheck.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-rake-diagnostics.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-data-policy.R`
+- Create: `<repo>/tests/testthat.R`
+- Create: `<repo>/tests/testthat/helper-fixtures.R`
+- Create: `<repo>/tests/testthat/test-dims-target.R`
+- Create: `<repo>/tests/testthat/test-precheck.R`
+- Create: `<repo>/tests/testthat/test-rake-diagnostics.R`
+- Create: `<repo>/tests/testthat/test-data-policy.R`
 
 - [ ] **Step 1: Create `tests/testthat.R`**
 
@@ -420,12 +420,12 @@ Expected: FAIL with missing exported functions such as `wf_dims()` or package lo
 ### Task 3: Implement Conditions, Utilities, Dimensions, And Targets
 
 **Files:**
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/conditions.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/utils.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/dims.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/target.R`
-- Source reference: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/inst/reference/weightflow_core.R`
-- Test: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-dims-target.R`
+- Create: `<repo>/R/conditions.R`
+- Create: `<repo>/R/utils.R`
+- Create: `<repo>/R/dims.R`
+- Create: `<repo>/R/target.R`
+- Source reference: `<repo>/inst/reference/weightflow_core.R`
+- Test: `<repo>/tests/testthat/test-dims-target.R`
 
 - [ ] **Step 1: Implement condition helpers**
 
@@ -524,9 +524,9 @@ Expected: commit records the tests and the implementation that makes the target 
 ### Task 4: Implement Precheck
 
 **Files:**
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/precheck.R`
-- Source reference: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/inst/reference/weightflow_core.R`
-- Test: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-precheck.R`
+- Create: `<repo>/R/precheck.R`
+- Source reference: `<repo>/inst/reference/weightflow_core.R`
+- Test: `<repo>/tests/testthat/test-precheck.R`
 
 - [ ] **Step 1: Run precheck tests and verify red state**
 
@@ -574,12 +574,12 @@ Expected: commit succeeds.
 ### Task 5: Implement Collapse, Raking, And Diagnostics
 
 **Files:**
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/collapse.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/rake.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/diagnostics.R`
-- Modify: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/utils.R`
-- Source reference: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/inst/reference/weightflow_core.R`
-- Test: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-rake-diagnostics.R`
+- Create: `<repo>/R/collapse.R`
+- Create: `<repo>/R/rake.R`
+- Create: `<repo>/R/diagnostics.R`
+- Modify: `<repo>/R/utils.R`
+- Source reference: `<repo>/inst/reference/weightflow_core.R`
+- Test: `<repo>/tests/testthat/test-rake-diagnostics.R`
 
 - [ ] **Step 1: Run raking and diagnostics tests and verify red state**
 
@@ -653,10 +653,10 @@ Expected: commit succeeds.
 ### Task 6: Generate Simulated Package Data
 
 **Files:**
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/data-raw/make-weightflow-example.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/data/weightflow_example.rda`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/R/data.R`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-example-data.R`
+- Create: `<repo>/data-raw/make-weightflow-example.R`
+- Create: `<repo>/data/weightflow_example.rda`
+- Create: `<repo>/R/data.R`
+- Create: `<repo>/tests/testthat/test-example-data.R`
 
 - [ ] **Step 1: Write failing data test**
 
@@ -775,10 +775,10 @@ Expected: commit succeeds and private source files remain ignored.
 ### Task 7: Add Documentation And Handoff Files
 
 **Files:**
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/README.md`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/README.zh-CN.md`
-- Create: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/AGENTS.md`
-- Test: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/tests/testthat/test-data-policy.R`
+- Create: `<repo>/README.md`
+- Create: `<repo>/README.zh-CN.md`
+- Create: `<repo>/AGENTS.md`
+- Test: `<repo>/tests/testthat/test-data-policy.R`
 
 - [ ] **Step 1: Run policy tests and verify `.Rbuildignore` coverage**
 
@@ -838,15 +838,9 @@ wf_diagnose(weights, target = target)
 
 - [ ] **Step 3: Create `README.zh-CN.md`**
 
-Write exactly:
-
-```markdown
-# weightflow 中文简介
-
-`weightflow` 是一个用于调查数据加权校准的 R 包项目，核心流程是先预检查、再执行加权、最后诊断结果。项目代码、测试、英文文档和配置均使用英文；本文件是仓库中唯一的中文说明文件。
-
-当前版本目标是完成 0.1.0 的基础 R 包结构和核心 raking 工作流。原始测试数据属于私有资料，不会上传到 GitHub，也不会随 R 包发布。示例和测试只使用新生成的模拟数据。
-```
+Create the concise root-level Chinese overview file. Keep its content only in
+`README.zh-CN.md`; do not duplicate the Chinese prose elsewhere in the
+repository.
 
 - [ ] **Step 4: Create `AGENTS.md`**
 
@@ -896,9 +890,9 @@ Expected: commit succeeds.
 ### Task 8: Generate R Documentation And Run Package Verification
 
 **Files:**
-- Generate: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/NAMESPACE`
-- Generate: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/man/*.Rd`
-- Modify: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/DESCRIPTION` if roxygen updates `RoxygenNote`
+- Generate: `<repo>/NAMESPACE`
+- Generate: `<repo>/man/*.Rd`
+- Modify: `<repo>/DESCRIPTION` if roxygen updates `RoxygenNote`
 
 - [ ] **Step 1: Generate roxygen documentation**
 
@@ -964,7 +958,7 @@ Expected: commit succeeds with no private data staged.
 ### Task 9: Final Verification Report
 
 **Files:**
-- Read: `/Users/makunxiang/Documents/AI编程/R Pack/weightflow/*check/00check.log` if `R CMD check` creates a check directory.
+- Read: `<repo>/*check/00check.log` if `R CMD check` creates a check directory.
 
 - [ ] **Step 1: Re-run final commands freshly**
 

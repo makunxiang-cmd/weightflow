@@ -13,3 +13,4 @@ private-data/
 tmp/
 *.tar.gz
 *.Rcheck/
+..Rcheck/

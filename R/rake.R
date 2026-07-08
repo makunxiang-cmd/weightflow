@@ -7,6 +7,7 @@
 #' @param max_iter Maximum iterations.
 #' @param group Group key.
 #' @keywords internal
+#' @noRd
 .wf_ipf <- function(w, idx, tg_list, tol, max_iter, group) {
   it <- 0L
   dev <- Inf
@@ -39,6 +40,7 @@
 #' @param margins Target margins.
 #' @param total Group total.
 #' @keywords internal
+#' @noRd
 .wf_expand_group <- function(rows_chr, na_mask, margins, total) {
   n <- nrow(rows_chr)
   D <- ncol(rows_chr)
