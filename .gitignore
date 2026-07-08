@@ -11,3 +11,5 @@
 *.xlsx
 private-data/
 tmp/
+*.tar.gz
+*.Rcheck/

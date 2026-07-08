@@ -1,0 +1,11 @@
+^\.git$
+^\.gitignore$
+^\.codegraph$
+^docs$
+^data-raw$
+^private-data$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.DS_Store$
+^README\.zh-CN\.md$
+^AGENTS\.md$

@@ -1,0 +1,17 @@
+Package: weightflow
+Title: Workflow-Oriented Survey Weight Calibration
+Version: 0.1.0
+Authors@R: c(
+    person("Weightflow", "Contributors", email = "weightflow-maintainers@example.com", role = c("aut", "cre"))
+  )
+Description: Provides a disciplined precheck, execution, and diagnostics workflow
+    for survey weighting and raking with schema-agnostic dimensions and canonical
+    target objects.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+LazyData: true
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
