@@ -25,14 +25,28 @@
   L <- bounds[1]
   U <- bounds[2]
   A <- (U - L) / ((1 - L) * (U - 1))
+  # Overflow-safe: for A*u >= 0 divide through by e = exp(A*u) so exp only ever
+  # sees non-positive arguments (avoids Inf/Inf -> NaN when u overshoots).
   list(
     F = function(u) {
-      e <- exp(A * u)
-      (L * (U - 1) + U * (1 - L) * e) / ((U - 1) + (1 - L) * e)
+      s <- A * u
+      out <- numeric(length(s))
+      pos <- s >= 0
+      em <- exp(-s[pos])
+      out[pos] <- (L * (U - 1) * em + U * (1 - L)) / ((U - 1) * em + (1 - L))
+      e <- exp(s[!pos])
+      out[!pos] <- (L * (U - 1) + U * (1 - L) * e) / ((U - 1) + (1 - L) * e)
+      out
     },
     Fp = function(u) {
-      e <- exp(A * u)
-      (U - L)^2 * e / ((U - 1) + (1 - L) * e)^2
+      s <- A * u
+      out <- numeric(length(s))
+      pos <- s >= 0
+      em <- exp(-s[pos])
+      out[pos] <- (U - L)^2 * em / ((U - 1) * em + (1 - L))^2
+      e <- exp(s[!pos])
+      out[!pos] <- (U - L)^2 * e / ((U - 1) + (1 - L) * e)^2
+      out
     }
   )
 }
@@ -80,7 +94,7 @@
   repeat {
     resid <- t - as.numeric(t(X) %*% w)
     maxr <- max(abs(resid)) / total
-    if (maxr < tol) {
+    if (is.finite(maxr) && maxr < tol) {
       converged <- TRUE
       break
     }
@@ -93,7 +107,19 @@
         "wf_error_feasibility", list(group = g)
       )
     }
-    lambda <- lambda + step
+    # Damped Newton: shrink the step until weights stay finite and the residual
+    # decreases (keeps the logit distance from overflowing on an overshoot).
+    alpha <- 1
+    repeat {
+      lambda_try <- lambda + alpha * step
+      u_try <- as.numeric(X %*% lambda_try)
+      w_try <- d * dist$F(u_try)
+      maxr_try <- max(abs(t - as.numeric(t(X) %*% w_try))) / total
+      if (all(is.finite(w_try)) && is.finite(maxr_try) && maxr_try < maxr) break
+      alpha <- alpha / 2
+      if (alpha < 1e-10) break
+    }
+    lambda <- lambda + alpha * step
     steps <- steps + 1L
     u <- as.numeric(X %*% lambda)
     w <- d * dist$F(u)
@@ -161,7 +187,7 @@
   }
 
   if (is.null(init_weight)) {
-    iw <- rep(1, nrow(sample))
+    iw <- NULL   # per-group default (total/n) computed in the loop
   } else {
     if (length(init_weight) != 1 || !is.character(init_weight) ||
         !init_weight %in% names(sample)) {
@@ -188,7 +214,8 @@
     gr <- target$groups[[g]]
     sub <- sample[sel, , drop = FALSE]
     built <- .wf_lincal_build(sub, dvars, gr)
-    fit <- .wf_lincal_group(built$X, iw[sel], built$t, dist,
+    d_g <- if (is.null(iw)) rep(gr$total / length(sel), length(sel)) else iw[sel]
+    fit <- .wf_lincal_group(built$X, d_g, built$t, dist,
                             tol, max_iter, gr$total, g)
 
     res_rows[[g]] <- data.frame(

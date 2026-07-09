@@ -139,3 +139,46 @@ test_that(".wf_lincalibrate drops NA rows with a warning and errors on demand", 
     class = "wf_error_schema"
   )
 })
+
+test_that("wf_calibrate routes greg and logit to the calibration engine", {
+  fixture <- make_weightflow_fixture()
+  greg <- wf_calibrate(fixture$sample, fixture$target, method = "greg",
+                       id = "id")
+  logit <- wf_calibrate(fixture$sample, fixture$target, method = "logit",
+                        bounds = c(0.3, 3), id = "id")
+
+  expect_equal(greg$provenance$method, "greg")
+  expect_equal(logit$provenance$method, "logit")
+  # logit ratios stay within bounds
+  expect_true(all(logit$log$ratio_min >= 0.3 - 1e-9))
+  expect_true(all(logit$log$ratio_max <= 3 + 1e-9))
+})
+
+test_that("wf_calibrate requires valid bounds for logit", {
+  fixture <- make_weightflow_fixture()
+  expect_error(
+    wf_calibrate(fixture$sample, fixture$target, method = "logit", id = "id"),
+    class = "wf_error_input"
+  )
+  expect_error(
+    wf_calibrate(fixture$sample, fixture$target, method = "logit",
+                 bounds = c(2, 0.5), id = "id"),
+    class = "wf_error_input"
+  )
+})
+
+test_that("wf_calibrate logit with loose bounds approximates raking", {
+  fixture <- make_weightflow_fixture()
+  raked <- wf_rake(fixture$sample, fixture$target, id = "id")
+  logit <- wf_calibrate(fixture$sample, fixture$target, method = "logit",
+                        bounds = c(1e-6, 1e6), id = "id")
+  m <- match(raked$data$id, logit$data$id)
+  expect_equal(logit$data$weight[m], raked$data$weight, tolerance = 1e-4)
+})
+
+test_that("wf_calibrate still routes raking and poststrat unchanged", {
+  fixture <- make_weightflow_fixture()
+  raked <- wf_calibrate(fixture$sample, fixture$target, method = "raking",
+                        id = "id")
+  expect_equal(raked$provenance$method, "raking")
+})
