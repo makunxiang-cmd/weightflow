@@ -89,3 +89,53 @@ test_that(".wf_lincal_group aborts when bounds are infeasible", {
     class = "wf_error_feasibility"
   )
 })
+
+test_that(".wf_lincalibrate returns a wf_weights that hits every margin", {
+  fixture <- make_weightflow_fixture()
+  w <- .wf_lincalibrate(fixture$sample, fixture$target, distance = "linear",
+                        method = "greg", id = "id")
+
+  expect_s3_class(w, "wf_weights")
+  expect_named(w$data, c("id", "group", "weight", "feature"))
+  expect_equal(w$provenance$method, "greg")
+
+  # province A female margin is reproduced
+  s <- fixture$sample
+  a_female <- sum(w$data$weight[s$province == "A" & s$gender == "female"])
+  target_af <- fixture$target$groups[["A"]]$margins$gender[["female"]]
+  expect_equal(a_female, target_af, tolerance = 1e-6)
+})
+
+test_that(".wf_lincalibrate respects init_weight", {
+  fixture <- make_weightflow_fixture()
+  s <- fixture$sample
+  s$bw <- ifelse(s$gender == "female" & s$age == "young", 3, 1)
+
+  uniform <- .wf_lincalibrate(s, fixture$target, distance = "linear",
+                              method = "greg", id = "id")
+  weighted <- .wf_lincalibrate(s, fixture$target, distance = "linear",
+                               method = "greg", id = "id", init_weight = "bw")
+
+  expect_false(isTRUE(all.equal(uniform$data$weight, weighted$data$weight)))
+  # margins still reproduced under a non-uniform base
+  a_female <- sum(weighted$data$weight[s$province == "A" & s$gender == "female"])
+  expect_equal(a_female, fixture$target$groups[["A"]]$margins$gender[["female"]],
+               tolerance = 1e-6)
+})
+
+test_that(".wf_lincalibrate drops NA rows with a warning and errors on demand", {
+  fixture <- make_weightflow_fixture()
+  s <- fixture$sample
+  s$gender[1] <- NA
+
+  expect_warning(
+    .wf_lincalibrate(s, fixture$target, distance = "linear", method = "greg",
+                     id = "id", na = "drop", precheck = FALSE),
+    class = "wf_warning_data"
+  )
+  expect_error(
+    .wf_lincalibrate(s, fixture$target, distance = "linear", method = "greg",
+                     id = "id", na = "error", precheck = FALSE),
+    class = "wf_error_schema"
+  )
+})
