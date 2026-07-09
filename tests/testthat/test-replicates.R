@@ -134,3 +134,75 @@ test_that(".wf_brr_mult rejects a stratum without exactly 2 PSUs", {
   des <- .wf_design(d, strata = "stratum", clusters = "psu")
   expect_error(.wf_brr_mult(des), class = "wf_error_design")
 })
+
+# A trivial refit: no calibration, weights = base (so we can verify wiring).
+trivial_refit <- function(data, weights) {
+  structure(list(
+    data = data.frame(id = data$id, group = "all",
+                      weight = weights, feature = 1 / weights,
+                      stringsAsFactors = FALSE)
+  ), class = "wf_weights")
+}
+
+test_that("wf_replicates returns aligned base and replicate weights", {
+  d <- make_design_data()
+  rep_w <- wf_replicates(d, trivial_refit, method = "bootstrap",
+                         R = 30, strata = "stratum", clusters = "psu",
+                         id = "id", seed = 1)
+
+  expect_s3_class(rep_w, "wf_replicate_weights")
+  expect_equal(nrow(rep_w$base), 8)
+  expect_equal(rep_w$base$id, d$id)
+  expect_equal(dim(rep_w$replicates), c(8, 30))
+  expect_equal(rep_w$base$weight, rep(1, 8))   # trivial refit, base = 1
+  expect_equal(rep_w$provenance$method, "bootstrap")
+  expect_equal(rep_w$provenance$seed, 1)
+})
+
+test_that("wf_replicates applies base_weight and perturbs it by the multipliers", {
+  d <- make_design_data()
+  d$bw <- rep(2, 8)
+  rep_w <- wf_replicates(d, trivial_refit, method = "jackknife",
+                         strata = "stratum", clusters = "psu",
+                         id = "id", base_weight = "bw")
+  # jackknife replicate 1 deletes PSU a1: rows 1,2 -> 0, rows 3,4 -> 2*2=4
+  expect_equal(rep_w$replicates[1:2, 1], c(0, 0))
+  expect_equal(rep_w$replicates[3:4, 1], c(4, 4))
+})
+
+test_that("wf_replicates errors when refit returns mismatched ids", {
+  d <- make_design_data()
+  bad_refit <- function(data, weights) {
+    structure(list(
+      data = data.frame(id = paste0("x", seq_len(nrow(data))),
+                        group = "all", weight = weights,
+                        feature = 1 / weights, stringsAsFactors = FALSE)
+    ), class = "wf_weights")
+  }
+  expect_error(
+    wf_replicates(d, bad_refit, method = "bootstrap", R = 3,
+                  strata = "stratum", clusters = "psu", id = "id"),
+    class = "wf_error_input"
+  )
+})
+
+test_that("wf_replicates validates its inputs", {
+  d <- make_design_data()
+  expect_error(wf_replicates(d, "notfun", method = "bootstrap", id = "id"),
+               class = "wf_error_input")
+  expect_error(wf_replicates(d, trivial_refit, method = "bootstrap",
+                             R = 0, id = "id"),
+               class = "wf_error_input")
+  expect_error(wf_replicates(d, trivial_refit, method = "bootstrap",
+                             id = "missing"),
+               class = "wf_error_input")
+})
+
+test_that("print.wf_replicate_weights reports method and replicate count", {
+  d <- make_design_data()
+  rep_w <- wf_replicates(d, trivial_refit, method = "bootstrap", R = 5,
+                         strata = "stratum", clusters = "psu", id = "id",
+                         seed = 1)
+  expect_output(print(rep_w), "wf_replicate_weights")
+  expect_output(print(rep_w), "bootstrap")
+})

@@ -175,3 +175,128 @@
   }
   list(mult = mult, scale = 1 / R, rscales = rep(1, R))
 }
+
+#' Generate re-calibrated replicate weights for variance estimation.
+#'
+#' Perturbs base weights by bootstrap, jackknife, or BRR multipliers and
+#' re-runs a calibration pipeline (`refit`) on each replicate, so the resulting
+#' variance captures calibration uncertainty. Pair with [wf_variance()].
+#'
+#' @param data Input data frame (one row per unit).
+#' @param refit A closure `function(data, weights) -> wf_weights` that re-runs
+#'   the calibration pipeline using `weights` as the base/initial weights.
+#' @param method Replication method.
+#' @param R Number of bootstrap replicates (ignored for jackknife / BRR).
+#' @param strata Optional stratum column name (single stratum if `NULL`).
+#' @param clusters Optional PSU column name (each row is its own PSU if `NULL`).
+#' @param id Optional id column aligning replicate weights (row order if `NULL`).
+#' @param base_weight Optional starting base-weight column (all `1` if `NULL`).
+#' @param seed Optional integer seed for the bootstrap draws.
+#' @return A `wf_replicate_weights` object.
+#' @export
+wf_replicates <- function(data, refit,
+                          method = c("bootstrap", "jackknife", "brr"),
+                          R = 500, strata = NULL, clusters = NULL,
+                          id = NULL, base_weight = NULL, seed = NULL) {
+  if (!is.data.frame(data) || nrow(data) == 0) {
+    wf_abort("`data` must be a non-empty data frame.", "wf_error_input")
+  }
+  if (!is.function(refit)) {
+    wf_abort("`refit` must be a function(data, weights) returning a wf_weights.",
+             "wf_error_input")
+  }
+  method <- match.arg(method)
+  if (method == "bootstrap" &&
+      (length(R) != 1 || !is.finite(R) || R < 1 || R != as.integer(R))) {
+    wf_abort("`R` must be a positive integer.", "wf_error_input", list(R = R))
+  }
+  n <- nrow(data)
+  if (!is.null(id)) {
+    if (length(id) != 1 || !is.character(id) || !id %in% names(data)) {
+      wf_abort("`id` must name a column in `data`.", "wf_error_input",
+               list(id = id))
+    }
+    canon <- .chr(data[[id]])
+  } else {
+    canon <- as.character(seq_len(n))
+  }
+  if (anyDuplicated(canon)) {
+    wf_abort("Unit ids are not unique.", "wf_error_input")
+  }
+  if (!is.null(base_weight)) {
+    if (length(base_weight) != 1 || !is.character(base_weight) ||
+        !base_weight %in% names(data)) {
+      wf_abort("`base_weight` must name a column in `data`.", "wf_error_input",
+               list(base_weight = base_weight))
+    }
+    base <- as.numeric(data[[base_weight]])
+  } else {
+    base <- rep(1, n)
+  }
+  if (any(!is.finite(base)) || any(base <= 0)) {
+    wf_abort("`base_weight` must be positive and finite.", "wf_error_input")
+  }
+
+  design <- .wf_design(data, strata, clusters)
+  t0 <- Sys.time()
+  gen <- switch(
+    method,
+    bootstrap = .wf_boot_mult(design, R, seed),
+    jackknife = .wf_jack_mult(design),
+    brr = .wf_brr_mult(design)
+  )
+
+  align <- function(fit) {
+    if (!inherits(fit, "wf_weights") || is.null(fit$data$id) ||
+        is.null(fit$data$weight)) {
+      wf_abort("`refit` must return a wf_weights with id and weight columns.",
+               "wf_error_input")
+    }
+    fid <- .chr(fit$data$id)
+    m <- match(canon, fid)
+    if (length(fid) != n || anyNA(m)) {
+      wf_abort("`refit` output ids do not match the input units.",
+               "wf_error_input")
+    }
+    grp <- if (is.null(fit$data$group)) rep("all", n) else .chr(fit$data$group)[m]
+    list(weight = as.numeric(fit$data$weight)[m], group = grp)
+  }
+
+  base_al <- align(refit(data, base))
+  rg <- ncol(gen$mult)
+  repw <- matrix(0, n, rg)
+  for (r in seq_len(rg)) {
+    repw[, r] <- align(refit(data, base * gen$mult[, r]))$weight
+  }
+
+  structure(list(
+    base = data.frame(id = canon, group = base_al$group,
+                      weight = base_al$weight, stringsAsFactors = FALSE),
+    replicates = repw,
+    scale = gen$scale,
+    rscales = gen$rscales,
+    method = method,
+    design = list(strata = strata, clusters = clusters,
+                  n_strata = length(design$strata), R = rg),
+    provenance = list(
+      method = method, R = rg, seed = seed,
+      strata = strata, clusters = clusters, base_weight = base_weight,
+      created = t0, elapsed = as.numeric(Sys.time() - t0, units = "secs"),
+      package_version = .wf_replicates_package_version()
+    )
+  ), class = "wf_replicate_weights")
+}
+
+#' Print replicate weights
+#'
+#' @param x A `wf_replicate_weights` object.
+#' @param ... Unused.
+#' @return Invisibly returns `x`.
+#' @export
+print.wf_replicate_weights <- function(x, ...) {
+  cat(sprintf("<wf_replicate_weights>  %d unit(s); method: %s; %d replicate(s)\n",
+              nrow(x$base), x$method, ncol(x$replicates)))
+  cat(sprintf("  design: %d stratum(s); scale %.4g; elapsed %.2fs\n",
+              x$design$n_strata, x$scale, x$provenance$elapsed))
+  invisible(x)
+}
