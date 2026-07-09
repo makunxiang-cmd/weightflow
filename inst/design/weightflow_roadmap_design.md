@@ -26,13 +26,13 @@ The ordering reflects marginal value to the current national-survey project: fus
 
 ### 2.1 Problem
 
-The project produces two weight sets from two sources: an online sample calibrated by `wf_rake()` and an offline sample calibrated by `wf_poststrat()`. The deliverable is a single set of population estimates (e.g. pass rates by subpopulation) that combines both. This is the classic **dual-frame / probability-plus-nonprobability composite estimation** problem (Hartley 1962; Elliott & Valliant 2017): each source yields an estimate of the same population quantity, combined as a convex combination with weights λ and 1−λ.
+The project produces two weight sets from two sources: an online sample calibrated by `wf_rake()` and an offline sample calibrated by `wf_poststrat()`. The deliverable is a single set of population estimates (e.g. pass rates by subpopulation) that combines both. This is the classic **dual-frame / probability-plus-nonprobability composite estimation** problem (Hartley 1962; Elliott & Valliant 2017): each source yields an estimate of the same population quantity, combined as a convex combination with weights lambda and 1 - lambda.
 
 ### 2.2 Two hard design rules, learned from the earlier analysis
 
-**Rule A — compose at the estimator level, never pool the weights.** For a ratio-type quantity such as a pass rate, `blend(rate) = λ·rate_online + (1−λ)·rate_offline` is *not* equal to computing a rate on a table where the two weight sets are stacked. Stacking lets each source's contribution be silently governed by its weight-sum in each cell rather than by the intended λ. `wf_blend()` therefore computes each source's per-cell estimate first, then combines; the λ the user sets is exactly the λ that acts.
+**Rule A - compose at the estimator level, never pool the weights.** For a ratio-type quantity such as a pass rate, `blend(rate) = lambda * rate_online + (1 - lambda) * rate_offline` is *not* equal to computing a rate on a table where the two weight sets are stacked. Stacking lets each source's contribution be silently governed by its weight-sum in each cell rather than by the intended lambda. `wf_blend()` therefore computes each source's per-cell estimate first, then combines; the lambda the user sets is exactly the lambda that acts.
 
-**Rule B — λ varies by cell (or at least by group), it is not one global constant.** The relative reliability of the two sources differs across cells: an urban high-education cell may have thousands of online respondents and few offline; a rural elderly cell the reverse. A single global λ (e.g. a blanket 4:1) over-trusts online where it is thin — precisely where its raked/collapsed estimate is an extrapolation — which is a substantive error, not just an efficiency loss. The default λ is data-driven per cell.
+**Rule B - lambda varies by cell (or at least by group), it is not one global constant.** The relative reliability of the two sources differs across cells: an urban high-education cell may have thousands of online respondents and few offline; a rural elderly cell the reverse. A single global lambda (e.g. a blanket 4:1) over-trusts online where it is thin - precisely where its raked/collapsed estimate is an extrapolation - which is a substantive error, not just an efficiency loss. The default lambda is data-driven per cell.
 
 ### 2.3 `wf_blend()`
 
