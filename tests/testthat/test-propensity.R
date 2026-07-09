@@ -167,3 +167,10 @@ test_that("wf_propensity expands a factor predictor into per-level balance rows"
   expect_true("g" %in% w$balance$variable)
   expect_true(any(!is.na(w$balance$level)))
 })
+
+test_that("print.wf_weights reports the propensity method", {
+  tgt <- make_prop_target()
+  w <- suppressWarnings(wf_propensity(tgt))
+  expect_output(print(w), "method: propensity")
+  expect_output(print(w), "overlap:")
+})
