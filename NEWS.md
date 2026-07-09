@@ -1,3 +1,18 @@
+# weightflow 0.7.0
+
+Variance and uncertainty. Adds replicate-weight variance that re-runs the
+calibration pipeline per replicate, so estimates carry standard errors and
+confidence intervals including calibration uncertainty.
+
+* Added `wf_replicates()` to generate re-calibrated replicate weights via
+  Rao-Wu bootstrap, stratified delete-one jackknife, or BRR, driven by a user
+  refit closure.
+* Added `wf_variance()` to combine replicate weights and an estimator into an
+  estimate, variance, standard error, and normal or percentile confidence
+  interval, using one unified combining rule across methods.
+* Added an `init_weight` argument to `wf_rake()` so raking can consume replicate
+  base weights (unchanged behaviour when `NULL`).
+
 # weightflow 0.6.0
 
 Non-probability correction via propensity. Adds a two-step propensity workflow
