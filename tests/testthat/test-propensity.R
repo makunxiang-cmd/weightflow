@@ -174,3 +174,40 @@ test_that("print.wf_weights reports the propensity method", {
   expect_output(print(w), "method: propensity")
   expect_output(print(w), "overlap:")
 })
+
+test_that("wf_propensity output composes via wf_compose", {
+  tgt <- make_prop_target()
+  stage1 <- suppressWarnings(wf_propensity(tgt))
+  stage2 <- stage1
+  stage2$data$weight <- rep(2, nrow(stage2$data))
+  stage2$data$feature <- 1 / stage2$data$weight
+
+  composed <- wf_compose(propensity = stage1, adj = stage2)
+  expect_s3_class(composed, "wf_weights")
+  expect_equal(composed$data$weight, stage1$data$weight * 2, tolerance = 1e-8)
+})
+
+test_that("wf_propensity weights feed wf_poststrat as init_weight", {
+  # wf_poststrat is the calibration stage that exposes the init_weight seam.
+  fixture <- make_poststrat_fixture()
+  online <- fixture$sample[, c("gender", "age")]
+  reference <- data.frame(
+    gender = rep(c("female", "male"), each = 4),
+    age = rep(c("young", "old"), times = 4),
+    stringsAsFactors = FALSE
+  )
+  tgt <- wf_target_propensity(online, reference, member ~ gender + age)
+  pw <- suppressWarnings(wf_propensity(tgt))
+
+  # propensity weights are in online (== sample) row order
+  fixture$sample$pw <- pw$data$weight
+  weights <- wf_poststrat(
+    fixture$sample,
+    fixture$target,
+    min_cell = 2,
+    ladder = fixture$ladder,
+    init_weight = "pw",
+    id = "id"
+  )
+  expect_s3_class(weights, "wf_weights")
+})
