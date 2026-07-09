@@ -1,6 +1,7 @@
 ^\.git$
 ^\.gitignore$
 ^\.codegraph$
+^\.codegraph/
 ^docs$
 ^data-raw$
 ^private-data$

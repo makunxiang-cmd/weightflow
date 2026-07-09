@@ -7,7 +7,7 @@
 [![R >= 3.5.0](https://img.shields.io/badge/R-%3E%3D%203.5.0-blue.svg)](https://cran.r-project.org/)
 <!-- badges: end -->
 
-**English** | [简体中文](README.zh-CN.md)
+**English** | [Simplified Chinese](README.zh-CN.md)
 
 `weightflow` is a workflow-oriented R package for survey weighting and raking. It
 emphasizes a disciplined **precheck → execute → diagnose** loop for multi-source
