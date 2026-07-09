@@ -155,3 +155,7 @@ test_that("composed weights remain compatible with print and diagnose", {
   expect_false("margin_maxerr" %in% names(diag$table))
   expect_true(all(diag$table$converged))
 })
+
+test_that("wf_compose is available as a foundation pipeline API", {
+  expect_true(is.function(wf_compose))
+})

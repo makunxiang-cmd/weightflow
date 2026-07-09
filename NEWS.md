@@ -1,5 +1,17 @@
 # weightflow (development version)
 
+# weightflow 0.4.0
+
+Weight pipeline ledger. Adds a composition layer for chaining weighting stages
+while preserving stage-level provenance.
+
+* Added `wf_compose()` to multiply compatible `wf_weights` stages into one
+  auditable `wf_weights` result.
+* Added ID-safe composition with classed errors for duplicate IDs, missing IDs,
+  different ID sets, incompatible groups, and invalid weights.
+* Added optional composed-weight normalization with `normalize = "mean1"` and
+  `normalize = "sum"`.
+
 # weightflow 0.3.0
 
 Foundation API completion. Extends the calibration workflow with manual targets,

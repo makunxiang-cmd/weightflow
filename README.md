@@ -142,6 +142,24 @@ weights_manual <- wf_calibrate(
 wf_diagnose(weights_manual)
 ```
 
+## Pipeline Ledger
+
+Multiple weighting stages can be composed into one auditable `wf_weights` object.
+Composition matches units by ID, multiplies stage weights, and stores each stage
+in provenance.
+
+```r
+calibration <- wf_rake(weightflow_example$sample, target, id = "id")
+
+adjustment <- calibration
+adjustment$data$weight <- rep(c(0.9, 1.1), length.out = nrow(adjustment$data))
+adjustment$data$feature <- 1 / adjustment$data$weight
+adjustment$provenance$method <- "nonresponse_adjustment_example"
+
+final_weights <- wf_compose(adjustment, calibration, normalize = "mean1")
+wf_diagnose(final_weights)
+```
+
 ## Function reference
 
 | Stage | Function | Purpose |
@@ -159,6 +177,7 @@ wf_diagnose(weights_manual)
 | Calibrate | `wf_rake()` | Grouped raking (iterative proportional fitting). |
 | Calibrate | `wf_plan_poststrat()` | Plan post-stratification cell resolution. |
 | Calibrate | `wf_poststrat()` | Run cell-level post-stratification. |
+| Compose | `wf_compose()` | Compose multiple weighting stages into one auditable result. |
 | Diagnose | `wf_diagnose()` | Diagnose calibrated weights and margins. |
 
 All exported functions ship with full documentation. From R, use `?wf_rake`,
