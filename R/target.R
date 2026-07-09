@@ -195,3 +195,107 @@ wf_target_reference <- function(ref, feature, dims, by = NULL,
   }
   .wf_new_target("reference", by, dvars, groups, meta = list(created = Sys.time()))
 }
+
+#' Target from a manual margin table
+#'
+#' Builds a canonical `wf_target` from a ready-made long margin table with one
+#' row per group, dimension, and category.
+#'
+#' @param margins Data frame containing margin values.
+#' @param dims A `wf_dims` object.
+#' @param dim_col Column containing dimension names.
+#' @param cat_col Column containing category names.
+#' @param value_col Column containing non-negative margin values.
+#' @param by Optional target grouping variable.
+#' @param group_col Column containing group keys. Defaults to `by`.
+#' @param totals Optional named numeric vector of group totals.
+#' @param mode Target mode label.
+#'
+#' @return A `wf_target` object.
+#' @export
+#'
+#' @examples
+#' dims <- wf_dims(gender = c("female", "male"))
+#' margins <- data.frame(
+#'   dimension = c("gender", "gender"),
+#'   category = c("female", "male"),
+#'   value = c(55, 45)
+#' )
+#' wf_target_manual(margins, dims)
+wf_target_manual <- function(margins, dims,
+                             dim_col = "dimension",
+                             cat_col = "category",
+                             value_col = "value",
+                             by = NULL, group_col = by,
+                             totals = NULL, mode = "manual") {
+  if (!is.data.frame(margins)) {
+    wf_abort("`margins` must be a data.frame.", "wf_error_input")
+  }
+  if (!inherits(dims, "wf_dims")) {
+    wf_abort("`dims` must be a wf_dims object.", "wf_error_input")
+  }
+  dvars <- names(dims$vars)
+  .require_cols(margins, c(dim_col, cat_col, value_col, group_col), "manual margins")
+
+  vals <- margins[[value_col]]
+  if (any(is.na(vals)) || any(!is.finite(vals)) || any(vals < 0)) {
+    wf_abort("Manual margin values must be finite and >= 0.", "wf_error_input")
+  }
+
+  gkey <- if (is.null(by)) rep("_all_", nrow(margins)) else .chr(margins[[group_col]])
+  dims_in <- unique(.chr(margins[[dim_col]]))
+  missing_dims <- setdiff(dvars, dims_in)
+  extra_dims <- setdiff(dims_in, dvars)
+  if (length(missing_dims) > 0 || length(extra_dims) > 0) {
+    wf_abort(
+      sprintf(
+        "Manual margins must contain exactly the target dimensions. Missing: %s; extra: %s.",
+        paste(missing_dims, collapse = ", "),
+        paste(extra_dims, collapse = ", ")
+      ),
+      "wf_error_schema",
+      list(missing = missing_dims, extra = extra_dims)
+    )
+  }
+
+  groups <- list()
+  for (g in sort(unique(gkey))) {
+    sel_g <- gkey == g
+    group_margins <- list()
+    dim_totals <- numeric(length(dvars))
+    names(dim_totals) <- dvars
+    for (d in dvars) {
+      sel_d <- sel_g & .chr(margins[[dim_col]]) == d
+      cats <- .chr(margins[[cat_col]][sel_d])
+      values <- margins[[value_col]][sel_d]
+      agg <- tapply(values, cats, sum)
+      agg <- .wf_margin_vector(agg[agg > 0])
+      level_order <- dims$vars[[d]]
+      if (!is.null(level_order)) {
+        agg <- agg[c(intersect(level_order, names(agg)), setdiff(names(agg), level_order))]
+      }
+      if (is.null(agg) || length(agg) == 0) {
+        wf_abort(sprintf("Group '%s', dim '%s': no positive manual margins.", g, d), "wf_error_input")
+      }
+      group_margins[[d]] <- agg
+      dim_totals[[d]] <- sum(agg)
+    }
+    total <- if (is.null(totals)) {
+      dim_totals[[1]]
+    } else {
+      if (is.null(names(totals)) || is.na(totals[g])) {
+        wf_abort(sprintf("`totals` must include group '%s'.", g), "wf_error_input")
+      }
+      unname(totals[g])
+    }
+    groups[[g]] <- list(total = total, margins = group_margins)
+  }
+
+  .wf_new_target(
+    mode,
+    by,
+    dvars,
+    groups,
+    meta = list(scale = "manual", created = Sys.time())
+  )
+}
