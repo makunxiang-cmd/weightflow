@@ -275,6 +275,22 @@ wf_rake <- function(sample, target, id = NULL,
 #' @return Invisibly returns `x`.
 #' @export
 print.wf_weights <- function(x, ...) {
+  if (!is.null(x$provenance$method) &&
+      x$provenance$method %in% c("greg", "logit")) {
+    bnd <- if (is.null(x$provenance$bounds)) "none" else
+      sprintf("[%.3g, %.3g]", x$provenance$bounds[1], x$provenance$bounds[2])
+    cat(sprintf(
+      "<wf_weights>  %d unit(s) in %d group(s); method: %s (%s); bounds: %s\n",
+      nrow(x$data), nrow(x$log), x$provenance$method,
+      x$provenance$distance, bnd
+    ))
+    cat(sprintf(
+      "  weight range [%.4g, %.4g]; converged: %d/%d; elapsed %.2fs\n",
+      min(x$data$weight), max(x$data$weight),
+      sum(x$log$converged), nrow(x$log), x$provenance$elapsed
+    ))
+    return(invisible(x))
+  }
   if (!is.null(x$provenance$method) && x$provenance$method == "propensity") {
     cat(sprintf(
       "<wf_weights>  %d unit(s) in %d group(s); method: propensity (%s / %s)\n",

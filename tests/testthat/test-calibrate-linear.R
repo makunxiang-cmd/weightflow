@@ -182,3 +182,11 @@ test_that("wf_calibrate still routes raking and poststrat unchanged", {
                         id = "id")
   expect_equal(raked$provenance$method, "raking")
 })
+
+test_that("print.wf_weights reports the calibration distance and bounds", {
+  fixture <- make_weightflow_fixture()
+  logit <- wf_calibrate(fixture$sample, fixture$target, method = "logit",
+                        bounds = c(0.3, 3), id = "id")
+  expect_output(print(logit), "method: logit")
+  expect_output(print(logit), "bounds")
+})
