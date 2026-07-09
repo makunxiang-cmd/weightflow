@@ -104,3 +104,33 @@ test_that(".wf_jack_mult warns on a single-PSU stratum and skips it", {
   des <- .wf_design(d, strata = "stratum", clusters = "psu")
   expect_warning(.wf_jack_mult(des), class = "wf_warning_quality")
 })
+
+test_that(".wf_hadamard builds an orthogonal +/-1 matrix of order a power of two", {
+  H <- .wf_hadamard(3)         # next power of two >= 3 is 4
+  expect_equal(dim(H), c(4, 4))
+  expect_true(all(H %in% c(-1, 1)))
+  expect_equal(t(H) %*% H, diag(4) * 4)
+})
+
+test_that(".wf_brr_mult assigns 2/0 within each 2-PSU stratum", {
+  d <- make_design_data()
+  des <- .wf_design(d, strata = "stratum", clusters = "psu")
+  gen <- .wf_brr_mult(des)
+
+  expect_equal(gen$scale, 1 / ncol(gen$mult))
+  expect_equal(gen$rscales, rep(1, ncol(gen$mult)))
+  # rows 1,2 are PSU a1; rows 3,4 are PSU a2 (stratum A)
+  for (r in seq_len(ncol(gen$mult))) {
+    expect_true(all(gen$mult[1:4, r] %in% c(0, 2)))
+    expect_equal(gen$mult[1, r], gen$mult[2, r])   # same PSU, same multiplier
+    expect_equal(gen$mult[3, r], gen$mult[4, r])
+    expect_equal(gen$mult[1, r] + gen$mult[3, r], 2)  # exactly one PSU selected
+  }
+})
+
+test_that(".wf_brr_mult rejects a stratum without exactly 2 PSUs", {
+  d <- make_design_data()
+  d$psu[4] <- "a3"             # stratum A now has 3 PSUs
+  des <- .wf_design(d, strata = "stratum", clusters = "psu")
+  expect_error(.wf_brr_mult(des), class = "wf_error_design")
+})

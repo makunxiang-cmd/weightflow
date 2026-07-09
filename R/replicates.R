@@ -121,3 +121,57 @@
   }
   list(mult = do.call(cbind, cols), scale = 1, rscales = rscales)
 }
+
+#' Sylvester-construction Hadamard matrix of order >= `n` (a power of two).
+#'
+#' @param n Minimum order.
+#' @keywords internal
+#' @noRd
+.wf_hadamard <- function(n) {
+  k <- 1
+  while (k < n) k <- k * 2
+  H <- matrix(1, 1, 1)
+  while (nrow(H) < k) {
+    H <- rbind(cbind(H, H), cbind(H, -H))
+  }
+  H
+}
+
+#' Balanced Repeated Replication multipliers (standard half-sampling).
+#'
+#' @param design A `.wf_design()` result; every stratum must have 2 PSUs.
+#' @keywords internal
+#' @noRd
+.wf_brr_mult <- function(design) {
+  sizes <- vapply(design$psu, length, integer(1))
+  bad <- design$strata[sizes != 2]
+  if (length(bad) > 0) {
+    wf_abort(
+      sprintf("BRR requires exactly 2 PSUs per stratum; not met by: %s.",
+              paste(bad, collapse = ", ")),
+      "wf_error_design", list(strata = bad)
+    )
+  }
+  H <- length(design$strata)
+  hmat <- .wf_hadamard(H + 1)
+  R <- nrow(hmat)
+  n <- design$n
+  mult <- matrix(1, n, R)
+  for (hi in seq_along(design$strata)) {
+    h <- design$strata[hi]
+    psus <- design$psu[[h]]
+    in_h <- design$stratum == h
+    u1 <- in_h & design$cluster == psus[1]
+    u2 <- in_h & design$cluster == psus[2]
+    for (r in seq_len(R)) {
+      if (hmat[r, hi + 1] > 0) {
+        mult[u1, r] <- 2
+        mult[u2, r] <- 0
+      } else {
+        mult[u1, r] <- 0
+        mult[u2, r] <- 2
+      }
+    }
+  }
+  list(mult = mult, scale = 1 / R, rscales = rep(1, R))
+}
