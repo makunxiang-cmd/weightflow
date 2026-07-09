@@ -244,11 +244,33 @@ wf_propensity <- function(target,
     stringsAsFactors = FALSE
   )
 
+  boundary <- 0.99
+  probs <- c(0, 0.01, 0.25, 0.5, 0.75, 0.99, 1)
+  p_ref <- phat[!is_online]
+  n_boundary <- sum(p_on > boundary)
+  overlap <- list(
+    threshold = boundary,
+    online = stats::quantile(p_on, probs, names = TRUE),
+    reference = stats::quantile(p_ref, probs, names = TRUE),
+    n_boundary = n_boundary,
+    n_online = length(p_on)
+  )
+  if (n_boundary > 0) {
+    wf_warn(
+      sprintf(
+        "%d online unit(s) have propensity > %.2f (poor common support; extreme pseudo-weights).",
+        n_boundary, boundary
+      ),
+      "wf_warning_quality",
+      list(n_boundary = n_boundary, threshold = boundary)
+    )
+  }
+
   structure(list(
     data = data,
     log = log,
     achieved = NULL,
-    overlap = NULL,
+    overlap = overlap,
     balance = NULL,
     provenance = list(
       method = "propensity",

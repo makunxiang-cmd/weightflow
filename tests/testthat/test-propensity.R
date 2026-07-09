@@ -104,3 +104,26 @@ test_that("wf_propensity errors when a by-group is missing a source", {
   tgt <- wf_target_propensity(online, reference, member ~ x, by = "region")
   expect_error(suppressWarnings(wf_propensity(tgt)), class = "wf_error_overlap")
 })
+
+test_that("wf_propensity attaches an overlap report", {
+  tgt <- make_prop_target()
+  w <- suppressWarnings(wf_propensity(tgt))
+
+  expect_type(w$overlap, "list")
+  expect_true(all(c("threshold", "online", "reference", "n_boundary", "n_online")
+                  %in% names(w$overlap)))
+  expect_equal(w$overlap$n_online, tgt$n_online)
+})
+
+test_that("wf_propensity warns on poor common support", {
+  # A strongly separating (but still convergent) predictor drives some online
+  # propensities above the 0.99 boundary.
+  online <- data.frame(x = c(3, 5, 7, 9, 11, -1), stringsAsFactors = FALSE)
+  reference <- data.frame(x = c(-11, -9, -7, -5, -3, 1), stringsAsFactors = FALSE)
+  tgt <- wf_target_propensity(online, reference, member ~ x)
+
+  expect_warning(wf_propensity(tgt), class = "wf_warning_quality")
+
+  w <- suppressWarnings(wf_propensity(tgt))
+  expect_gte(w$overlap$n_boundary, 1)
+})
