@@ -1,4 +1,17 @@
-# weightflow (development version)
+# weightflow 0.6.0
+
+Non-probability correction via propensity. Adds a two-step propensity workflow
+that corrects a self-selected online sample against an offline probability
+reference, emitting pseudo-design weights that feed calibration as initial
+weights.
+
+* Added `wf_target_propensity()` to stack an online sample and a probability
+  reference into a membership-model specification.
+* Added `wf_propensity()` to fit a base-R logistic membership model and emit
+  inverse-propensity pseudo-design weights as a `wf_weights` stage, with
+  stabilized IPW on by default and optional trimming.
+* Added overlap / common-support and covariate-balance diagnostics, with a
+  `wf_warning_quality` on poor support.
 
 # weightflow 0.5.0
 
