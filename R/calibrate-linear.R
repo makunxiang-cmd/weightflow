@@ -57,3 +57,54 @@
   }
   list(X = do.call(cbind, cols), t = t)
 }
+
+#' Solve the calibration equations for one group by Newton iteration.
+#'
+#' @param X Constraint matrix (n x p).
+#' @param d Base weights (length n).
+#' @param t Target totals (length p; `t[1]` is the group total).
+#' @param dist A `.wf_lincal_dist()` object.
+#' @param tol Convergence tolerance on the max residual relative to `total`.
+#' @param max_iter Iteration cap.
+#' @param total Group total (for the relative residual).
+#' @param g Group label (for error messages).
+#' @keywords internal
+#' @noRd
+.wf_lincal_group <- function(X, d, t, dist, tol, max_iter, total, g) {
+  lambda <- rep(0, ncol(X))
+  u <- as.numeric(X %*% lambda)
+  w <- d * dist$F(u)
+  steps <- 0L
+  converged <- FALSE
+  maxr <- NA_real_
+  repeat {
+    resid <- t - as.numeric(t(X) %*% w)
+    maxr <- max(abs(resid)) / total
+    if (maxr < tol) {
+      converged <- TRUE
+      break
+    }
+    if (steps >= max_iter) break
+    jac <- t(X) %*% (X * (d * dist$Fp(u)))
+    step <- tryCatch(solve(jac, resid), error = function(e) NULL)
+    if (is.null(step)) {
+      wf_abort(
+        sprintf("Group '%s': singular calibration system (empty category or collinear margins).", g),
+        "wf_error_feasibility", list(group = g)
+      )
+    }
+    lambda <- lambda + step
+    steps <- steps + 1L
+    u <- as.numeric(X %*% lambda)
+    w <- d * dist$F(u)
+  }
+  if (!converged) {
+    wf_abort(
+      sprintf("Group '%s': calibration did not converge in %d iterations (max relative residual %.3g). Bounds may be too tight to meet the margins.",
+              g, max_iter, maxr),
+      "wf_error_feasibility", list(group = g, residual = maxr)
+    )
+  }
+  list(w = w, iterations = steps, converged = TRUE,
+       max_resid = maxr, ratio = dist$F(u))
+}

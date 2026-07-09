@@ -47,3 +47,45 @@ test_that(".wf_lincal_build stacks multiple dims, dropping one level each", {
   expect_equal(ncol(built$X), 3)
   expect_equal(built$t, c(4, 2, 2))
 })
+
+test_that(".wf_lincal_group solves the GREG closed form by hand", {
+  # sample a,a,b,b; base 1; total 4; margin a=3,b=1 -> weights 1.5,1.5,0.5,0.5
+  X <- cbind(rep(1, 4), c(0, 0, 1, 1))
+  t <- c(4, 1)
+  d <- rep(1, 4)
+  dist <- .wf_lincal_dist("linear", NULL)
+  out <- .wf_lincal_group(X, d, t, dist, tol = 1e-10, max_iter = 100,
+                          total = 4, g = "_all_")
+
+  expect_true(out$converged)
+  expect_equal(out$w, c(1.5, 1.5, 0.5, 0.5))
+  expect_equal(out$iterations, 1)          # linear converges in one step
+})
+
+test_that(".wf_lincal_group logit keeps ratios within bounds and hits the target", {
+  X <- cbind(rep(1, 4), c(0, 0, 1, 1))
+  t <- c(4, 1)
+  d <- rep(1, 4)
+  dist <- .wf_lincal_dist("logit", c(0.3, 3))
+  out <- .wf_lincal_group(X, d, t, dist, tol = 1e-10, max_iter = 100,
+                          total = 4, g = "_all_")
+
+  expect_true(out$converged)
+  expect_true(all(out$ratio > 0.3 & out$ratio < 3))
+  # margins: intercept and category-b constraint both met
+  expect_equal(sum(out$w), 4, tolerance = 1e-8)
+  expect_equal(sum(out$w[3:4]), 1, tolerance = 1e-8)
+})
+
+test_that(".wf_lincal_group aborts when bounds are infeasible", {
+  # b units need mean 0.5 but a floor of 0.6 makes sum >= 1.2 > 1: infeasible
+  X <- cbind(rep(1, 4), c(0, 0, 1, 1))
+  t <- c(4, 1)
+  d <- rep(1, 4)
+  dist <- .wf_lincal_dist("logit", c(0.6, 3))
+  expect_error(
+    .wf_lincal_group(X, d, t, dist, tol = 1e-10, max_iter = 50,
+                     total = 4, g = "_all_"),
+    class = "wf_error_feasibility"
+  )
+})
