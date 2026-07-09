@@ -44,7 +44,7 @@ remotes::install_github("makunxiang-cmd/weightflow")
 Or build from a source tarball:
 
 ```r
-install.packages("weightflow_0.6.0.tar.gz", repos = NULL, type = "source")
+install.packages("weightflow_0.7.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ## Workflow at a glance
@@ -213,6 +213,26 @@ calibrated <- wf_poststrat(online, pop_target, min_cell = 20, ladder = ladder,
                            init_weight = "pw", id = "id")
 ```
 
+## Variance & Uncertainty
+
+Any weighted estimate can carry a standard error and confidence interval that
+include calibration uncertainty, via replicate weights. `wf_replicates()`
+perturbs base weights (Rao-Wu bootstrap, jackknife, or BRR) and re-runs the
+calibration pipeline on each replicate through a `refit` closure;
+`wf_variance()` combines them with an estimator into an estimate, SE, and CI.
+
+```r
+refit <- function(data, weights) {
+  data$.bw <- weights
+  wf_rake(data, target, id = "id", init_weight = ".bw")
+}
+
+reps <- wf_replicates(sample, refit, method = "bootstrap", R = 500,
+                      strata = "stratum", clusters = "psu", id = "id",
+                      seed = 1)
+wf_variance(reps, function(w, d) sum(w * d$y) / sum(w), sample)
+```
+
 ## Function reference
 
 | Stage | Function | Purpose |
@@ -234,6 +254,8 @@ calibrated <- wf_poststrat(online, pop_target, min_cell = 20, ladder = ladder,
 | Fusion | `wf_blend()` | Fuse online and offline estimates at the estimator level. |
 | Propensity | `wf_target_propensity()` | Stack an online sample and a probability reference into a membership-model spec. |
 | Propensity | `wf_propensity()` | Emit inverse-propensity pseudo-design weights with overlap and balance diagnostics. |
+| Variance | `wf_replicates()` | Generate re-calibrated bootstrap/jackknife/BRR replicate weights. |
+| Variance | `wf_variance()` | Combine replicate weights and an estimator into an estimate, SE, and CI. |
 | Diagnose | `wf_diagnose()` | Diagnose calibrated weights and margins. |
 
 All exported functions ship with full documentation. From R, use `?wf_rake`,

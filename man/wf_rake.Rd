@@ -13,7 +13,8 @@ wf_rake(
   trim_cycles = 4,
   tol = 1e-06,
   max_iter = 200,
-  precheck = TRUE
+  precheck = TRUE,
+  init_weight = NULL
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ wf_rake(
 \item{max_iter}{Maximum iterations.}
 
 \item{precheck}{Whether to run \code{wf_precheck()} before raking.}
+
+\item{init_weight}{Optional column of initial weights. If \code{NULL}, raking
+starts from uniform weights (unchanged behaviour).}
 }
 \value{
 A \code{wf_weights} object.
