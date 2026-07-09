@@ -127,3 +127,43 @@ test_that("wf_propensity warns on poor common support", {
   w <- suppressWarnings(wf_propensity(tgt))
   expect_gte(w$overlap$n_boundary, 1)
 })
+
+test_that("wf_propensity balance table reports unweighted and weighted SMDs", {
+  tgt <- make_prop_target()
+  w <- suppressWarnings(wf_propensity(tgt))
+
+  expect_s3_class(w$balance, "data.frame")
+  expect_named(w$balance, c("variable", "level", "smd_unweighted", "smd_weighted"))
+  expect_true("x" %in% w$balance$variable)
+})
+
+test_that("wf_propensity weighting shrinks the covariate gap", {
+  # Online over-represents high x; pseudo-weighting should pull its mean toward
+  # the reference, shrinking the standardized mean difference.
+  set.seed(1)
+  online <- data.frame(x = c(rnorm(40, 1.2, 1), rnorm(10, -1, 1)))
+  reference <- data.frame(x = c(rnorm(25, 1, 1), rnorm(25, -1, 1)))
+  tgt <- wf_target_propensity(online, reference, member ~ x)
+  w <- suppressWarnings(wf_propensity(tgt))
+
+  row <- w$balance[w$balance$variable == "x", ]
+  expect_lt(abs(row$smd_weighted), abs(row$smd_unweighted))
+})
+
+test_that("wf_propensity expands a factor predictor into per-level balance rows", {
+  online <- data.frame(
+    x = c(1.0, 1.5, 2.0, 2.5, -0.5),
+    g = c("a", "a", "b", "b", "a"),
+    stringsAsFactors = FALSE
+  )
+  reference <- data.frame(
+    x = c(-1.0, -0.5, 0.0, 0.5, 1.8),
+    g = c("b", "b", "a", "b", "a"),
+    stringsAsFactors = FALSE
+  )
+  tgt <- wf_target_propensity(online, reference, member ~ x + g)
+  w <- suppressWarnings(wf_propensity(tgt))
+
+  expect_true("g" %in% w$balance$variable)
+  expect_true(any(!is.na(w$balance$level)))
+})

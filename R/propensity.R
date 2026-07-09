@@ -9,6 +9,67 @@
   )
 }
 
+#' Standardized mean difference between online and reference for one covariate.
+#'
+#' @param x_on Numeric online values.
+#' @param x_ref Numeric reference values.
+#' @param w_on Online pseudo-weights (same length/order as `x_on`).
+#' @keywords internal
+#' @noRd
+.wf_propensity_smd <- function(x_on, x_ref, w_on) {
+  sd_pool <- sqrt((stats::var(x_on) + stats::var(x_ref)) / 2)
+  if (!is.finite(sd_pool) || sd_pool == 0) sd_pool <- NA_real_
+  c(
+    unweighted = (mean(x_on) - mean(x_ref)) / sd_pool,
+    weighted = (stats::weighted.mean(x_on, w_on) - mean(x_ref)) / sd_pool
+  )
+}
+
+#' Build the online-vs-reference covariate balance table.
+#'
+#' @param stacked The stacked online+reference frame.
+#' @param is_online Logical index of online rows in `stacked`.
+#' @param predictors Predictor names.
+#' @param w_on Online pseudo-weights (online-row order).
+#' @keywords internal
+#' @noRd
+.wf_propensity_balance <- function(stacked, is_online, predictors, w_on) {
+  online_rows <- stacked[is_online, , drop = FALSE]
+  ref_rows <- stacked[!is_online, , drop = FALSE]
+  rows <- list()
+  for (p in predictors) {
+    xo <- online_rows[[p]]
+    xr <- ref_rows[[p]]
+    if (is.numeric(xo)) {
+      s <- .wf_propensity_smd(xo, xr, w_on)
+      rows[[length(rows) + 1]] <- data.frame(
+        variable = p, level = NA_character_,
+        smd_unweighted = unname(s["unweighted"]),
+        smd_weighted = unname(s["weighted"]),
+        stringsAsFactors = FALSE
+      )
+    } else {
+      levs <- sort(unique(.chr(c(xo, xr))))
+      for (lv in levs[-1]) {
+        s <- .wf_propensity_smd(
+          as.numeric(.chr(xo) == lv),
+          as.numeric(.chr(xr) == lv),
+          w_on
+        )
+        rows[[length(rows) + 1]] <- data.frame(
+          variable = p, level = lv,
+          smd_unweighted = unname(s["unweighted"]),
+          smd_weighted = unname(s["weighted"]),
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+  out <- do.call(rbind, rows)
+  rownames(out) <- NULL
+  out
+}
+
 #' Build a propensity target: stacked reference frame and membership model spec.
 #'
 #' Stacks a self-selected `online` sample and a probability `reference` sample
@@ -266,12 +327,14 @@ wf_propensity <- function(target,
     )
   }
 
+  balance <- .wf_propensity_balance(stacked, is_online, target$predictors, w)
+
   structure(list(
     data = data,
     log = log,
     achieved = NULL,
     overlap = overlap,
-    balance = NULL,
+    balance = balance,
     provenance = list(
       method = "propensity",
       fit_method = target$method,
