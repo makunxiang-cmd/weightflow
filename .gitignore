@@ -15,3 +15,4 @@ tmp/
 *.Rcheck/
 ..Rcheck/
 build/
+.worktrees/
