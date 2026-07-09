@@ -1,13 +1,3 @@
-make_design_data <- function() {
-  data.frame(
-    id = paste0("u", 1:8),
-    stratum = c("A", "A", "A", "A", "B", "B", "B", "B"),
-    psu = c("a1", "a1", "a2", "a2", "b1", "b1", "b2", "b2"),
-    y = c(1, 0, 1, 1, 0, 0, 1, 0),
-    stringsAsFactors = FALSE
-  )
-}
-
 test_that(".wf_design resolves strata and clusters", {
   d <- make_design_data()
   des <- .wf_design(d, strata = "stratum", clusters = "psu")
