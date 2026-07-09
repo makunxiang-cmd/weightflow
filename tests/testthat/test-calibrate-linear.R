@@ -190,3 +190,32 @@ test_that("print.wf_weights reports the calibration distance and bounds", {
   expect_output(print(logit), "method: logit")
   expect_output(print(logit), "bounds")
 })
+
+test_that("logit calibration composes and serves as a replicates refit", {
+  fixture <- make_weightflow_fixture()
+  logit <- wf_calibrate(fixture$sample, fixture$target, method = "logit",
+                        bounds = c(0.2, 5), id = "id")
+
+  # composes with a second stage
+  stage2 <- logit
+  stage2$data$weight <- rep(2, nrow(stage2$data))
+  stage2$data$feature <- 1 / stage2$data$weight
+  composed <- wf_compose(cal = logit, adj = stage2)
+  expect_s3_class(composed, "wf_weights")
+
+  # serves as a wf_replicates refit. Bounded calibration is on the w/d ratio, so
+  # the replicate base weights must be on the population scale: carry a design
+  # weight (total/n = 200/8 = 25 in this fixture) via base_weight.
+  d <- fixture$sample
+  d$y <- as.numeric(d$age == "young")
+  d$dw <- 25
+  refit <- function(data, weights) {
+    data$.bw <- weights
+    wf_calibrate(data, fixture$target, method = "logit", bounds = c(0.2, 5),
+                 init_weight = ".bw", id = "id", precheck = FALSE)
+  }
+  reps <- wf_replicates(d, refit, method = "jackknife", id = "id",
+                        base_weight = "dw")
+  out <- wf_variance(reps, function(w, data) sum(w * data$y) / sum(w), d)
+  expect_true(is.finite(out$table$se))
+})
