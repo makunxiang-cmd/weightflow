@@ -6,8 +6,10 @@ multi-source survey calibration.
 
 ## Status
 
-This repository is in the first package build stage. The 0.1.0 scope is the
-base-R raking workflow described in `inst/design/weightflow_design.md`.
+This repository is in the foundation API build stage. The 0.3.0 scope adds
+manual targets, target shrinkage, collapse suggestions, collapse-plan
+application, and unified calibration dispatch while preserving the existing
+raking and post-stratification engines.
 
 ## Data Policy
 
@@ -75,4 +77,26 @@ post <- wf_poststrat(
   id = "id"
 )
 wf_diagnose(post)
+```
+
+## Foundation API Example
+
+Manual margins can be converted directly to a target and then calibrated through
+the unified dispatcher.
+
+```r
+manual <- data.frame(
+  dimension = c("gender", "gender", "age", "age"),
+  category = c("female", "male", "young", "old"),
+  value = c(55, 45, 60, 40)
+)
+
+target_manual <- wf_target_manual(manual, dims)
+weights_manual <- wf_calibrate(
+  weightflow_example$sample,
+  target_manual,
+  method = "raking",
+  id = "id"
+)
+wf_diagnose(weights_manual)
 ```

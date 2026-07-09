@@ -11,11 +11,12 @@ wf_apply_collapse(sample, target, plan)
 
 \item{target}{A \code{wf_target} object.}
 
-\item{plan}{List with \code{dim} and named character vector \code{map}.}
+\item{plan}{List with \code{dim} and named character vector \code{map}, or a
+\code{wf_collapse_plan} object from \code{wf_suggest_collapse()}.}
 }
 \value{
 A list with collapsed \code{sample} and \code{target}.
 }
 \description{
-Applies a category-merge map consistently to sample data and a target object.
+Applies category-merge maps consistently to sample data and a target object.
 }
