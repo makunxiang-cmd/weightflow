@@ -307,3 +307,106 @@ test_that("wf_blend computes group-level data-driven lambda and trims two-source
   expect_equal(out$estimates$lambda[out$estimates$group == "B"], 0.2, tolerance = 1e-10)
   expect_true(any(out$estimates$lambda_trimmed))
 })
+
+test_that("wf_blend handles one-source cells and rejects no-source outcome cells", {
+  online <- make_blend_weights(
+    "online",
+    group = c("A", "A"),
+    cell = c("online_only", "shared"),
+    weight = c(1, 1),
+    outcome = c(1, 1)
+  )
+  offline <- make_blend_weights(
+    "offline",
+    group = c("A", "A"),
+    cell = c("offline_only", "shared"),
+    weight = c(1, 1),
+    outcome = c(0, 0)
+  )
+
+  expect_warning(
+    out <- wf_blend(
+      online,
+      offline,
+      by_cell = "cell",
+      outcome = "outcome",
+      lambda = "neff",
+      sensitivity = FALSE
+    ),
+    class = "wf_warning_quality"
+  )
+
+  one_source <- out$estimates[out$estimates$cell %in% c("online_only", "offline_only"), ]
+  expect_equal(one_source$lambda[one_source$cell == "online_only"], 1, tolerance = 1e-10)
+  expect_equal(one_source$lambda[one_source$cell == "offline_only"], 0, tolerance = 1e-10)
+  expect_equal(out$diagnostics$one_source_cell_count, 2)
+
+  bad_online <- online
+  bad_offline <- offline
+  bad_online$data$outcome[bad_online$data$cell == "shared"] <- NA_real_
+  bad_offline$data$outcome[bad_offline$data$cell == "shared"] <- NA_real_
+  expect_error(
+    suppressWarnings(
+      wf_blend(bad_online, bad_offline, by_cell = "cell", outcome = "outcome", sensitivity = FALSE)
+    ),
+    class = "wf_error_feasibility"
+  )
+})
+
+test_that("wf_blend outcome-null mode returns a cell ledger instead of wf_weights", {
+  online <- make_blend_weights("online")
+  offline <- make_blend_weights("offline")
+
+  out <- wf_blend(
+    online,
+    offline,
+    by_cell = "cell",
+    outcome = NULL,
+    lambda = "fixed",
+    lambda_fixed = 0.7,
+    sensitivity = FALSE
+  )
+
+  expect_s3_class(out, "wf_blend_result")
+  expect_false(inherits(out, "wf_weights"))
+  expect_equal(nrow(out$estimates), 0)
+  expect_true(all(c("group", "cell", "lambda", "fused_cell_total") %in% names(out$cell_weights)))
+  expect_equal(out$cell_weights$lambda, rep(0.7, nrow(out$cell_weights)), tolerance = 1e-10)
+})
+
+test_that("wf_blend builds summaries, sensitivity output, print output, and provenance", {
+  online <- make_blend_weights(
+    "online",
+    group = c("A", "A", "B", "B"),
+    cell = c("urban", "rural", "urban", "rural"),
+    weight = c(1, 1, 1, 1),
+    outcome = c(1, 1, 0, 0)
+  )
+  offline <- make_blend_weights(
+    "offline",
+    group = c("A", "A", "B", "B"),
+    cell = c("urban", "rural", "urban", "rural"),
+    weight = c(1, 1, 1, 1),
+    outcome = c(0, 0, 1, 1)
+  )
+
+  out <- wf_blend(
+    online,
+    offline,
+    by_cell = "cell",
+    outcome = "outcome",
+    lambda = "fixed",
+    lambda_fixed = 0.25,
+    sensitivity = TRUE
+  )
+
+  expect_true(all(c("group", "estimate", "cell_weight") %in% names(out$summary)))
+  expect_true(all(c("lambda", "group", "estimate") %in% names(out$sensitivity)))
+  expect_equal(sort(unique(out$sensitivity$lambda)), seq(0.3, 0.9, by = 0.1), tolerance = 1e-10)
+  expect_equal(out$provenance$method, "blend")
+  expect_equal(out$provenance$sources$online$method, "online")
+  expect_equal(out$provenance$sources$offline$method, "offline")
+  expect_true(length(out$provenance$assumptions) >= 3)
+  expect_output(print(out), "<wf_blend_result>")
+  expect_output(print(out), "lambda")
+})
