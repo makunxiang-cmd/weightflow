@@ -186,3 +186,124 @@ test_that("wf_blend uses effective sample size for neff lambda", {
   expect_equal(out$estimates$lambda, 3 / 5, tolerance = 1e-10)
   expect_equal(out$estimates$estimate, (3 / 5) * (2 / 3), tolerance = 1e-10)
 })
+
+test_that("wf_blend uses inverse-variance lambda", {
+  online <- make_blend_weights(
+    "online",
+    group = c("A", "A"),
+    cell = c("urban", "urban"),
+    weight = c(1, 1),
+    outcome = c(1, 0)
+  )
+  offline <- make_blend_weights(
+    "offline",
+    group = c("A", "A"),
+    cell = c("urban", "urban"),
+    weight = c(1, 1),
+    outcome = c(1, 1)
+  )
+
+  out <- wf_blend(
+    online,
+    offline,
+    by_cell = "cell",
+    outcome = "outcome",
+    lambda = "inverse_variance",
+    trim_lambda = c(0, 1),
+    sensitivity = FALSE
+  )
+
+  expect_equal(out$estimates$variance_online, 0.125, tolerance = 1e-10)
+  expect_equal(out$estimates$variance_offline, 0, tolerance = 1e-10)
+  expect_equal(out$estimates$lambda, 0, tolerance = 1e-10)
+  expect_equal(out$estimates$estimate, 1, tolerance = 1e-10)
+})
+
+test_that("wf_blend applies fixed lambda tables by cell and group", {
+  online <- make_blend_weights(
+    "online",
+    group = c("A", "A", "B", "B"),
+    cell = c("urban", "rural", "urban", "rural"),
+    outcome = c(1, 1, 0, 0)
+  )
+  offline <- make_blend_weights(
+    "offline",
+    group = c("A", "A", "B", "B"),
+    cell = c("urban", "rural", "urban", "rural"),
+    outcome = c(0, 0, 1, 1)
+  )
+
+  by_cell_lambda <- data.frame(
+    group = c("A", "A", "B", "B"),
+    cell = c("urban", "rural", "urban", "rural"),
+    lambda = c(0.2, 0.4, 0.6, 0.8),
+    stringsAsFactors = FALSE
+  )
+  out_cell <- wf_blend(
+    online,
+    offline,
+    by_cell = "cell",
+    outcome = "outcome",
+    lambda = "fixed",
+    lambda_fixed = by_cell_lambda,
+    level = "cell",
+    sensitivity = FALSE
+  )
+  out_cell <- out_cell$estimates[order(out_cell$estimates$group, out_cell$estimates$cell), ]
+
+  expect_equal(out_cell$lambda, c(0.4, 0.2, 0.8, 0.6), tolerance = 1e-10)
+
+  by_group_lambda <- data.frame(
+    group = c("A", "B"),
+    lambda = c(0.25, 0.75),
+    stringsAsFactors = FALSE
+  )
+  out_group <- wf_blend(
+    online,
+    offline,
+    by_cell = "cell",
+    outcome = "outcome",
+    lambda = "fixed",
+    lambda_fixed = by_group_lambda,
+    level = "group",
+    sensitivity = FALSE
+  )
+  out_group <- out_group$estimates[order(out_group$estimates$group, out_group$estimates$cell), ]
+
+  expect_equal(out_group$lambda, c(0.25, 0.25, 0.75, 0.75), tolerance = 1e-10)
+})
+
+test_that("wf_blend computes group-level data-driven lambda and trims two-source cells", {
+  online <- make_blend_weights(
+    "online",
+    group = c("A", "A", "A", "B"),
+    cell = c("urban", "urban", "rural", "urban"),
+    weight = c(1, 1, 1, 100),
+    outcome = c(1, 1, 1, 1)
+  )
+  offline <- make_blend_weights(
+    "offline",
+    group = c("A", "A", rep("B", 10)),
+    cell = c("urban", "rural", rep("urban", 10)),
+    weight = rep(1, 12),
+    outcome = rep(0, 12)
+  )
+
+  out <- expect_warning(
+    wf_blend(
+      online,
+      offline,
+      by_cell = "cell",
+      outcome = "outcome",
+      lambda = "neff",
+      level = "group",
+      trim_lambda = c(0.2, 0.8),
+      sensitivity = FALSE
+    ),
+    class = "wf_warning_quality"
+  )
+
+  expect_equal(out$estimates$lambda[out$estimates$group == "A"], c(0.6, 0.6), tolerance = 1e-10)
+  expect_equal(out$estimates$lambda[out$estimates$group == "B"], 0.2, tolerance = 1e-10)
+  expect_true(any(out$estimates$lambda_trimmed))
+})
