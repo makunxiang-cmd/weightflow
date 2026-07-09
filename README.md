@@ -44,7 +44,7 @@ remotes::install_github("makunxiang-cmd/weightflow")
 Or build from a source tarball:
 
 ```r
-install.packages("weightflow_0.3.0.tar.gz", repos = NULL, type = "source")
+install.packages("weightflow_0.5.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ## Workflow at a glance
@@ -160,6 +160,37 @@ final_weights <- wf_compose(adjustment, calibration, normalize = "mean1")
 wf_diagnose(final_weights)
 ```
 
+## Dual-Source Fusion
+
+Online and offline calibrated sources can be fused at the estimator level with
+`wf_blend()`. The function computes each source's cell estimate first, then
+combines those estimates with the applied lambda recorded in the result.
+
+```r
+online <- wf_rake(weightflow_example$sample, target, id = "id")
+offline <- online
+
+analysis_cols <- weightflow_example$sample[c("id", "gender", "age")]
+online$data <- merge(online$data, analysis_cols, by = "id", all.x = TRUE, sort = FALSE)
+offline$data <- merge(offline$data, analysis_cols, by = "id", all.x = TRUE, sort = FALSE)
+
+online$data$cell <- online$data$gender
+offline$data$cell <- offline$data$gender
+online$data$outcome <- as.numeric(online$data$age == "young")
+offline$data$outcome <- as.numeric(offline$data$age == "young")
+
+blend <- wf_blend(
+  online,
+  offline,
+  by_cell = "cell",
+  outcome = "outcome",
+  lambda = "neff"
+)
+
+blend$estimates
+blend$lambda
+```
+
 ## Function reference
 
 | Stage | Function | Purpose |
@@ -178,6 +209,7 @@ wf_diagnose(final_weights)
 | Calibrate | `wf_plan_poststrat()` | Plan post-stratification cell resolution. |
 | Calibrate | `wf_poststrat()` | Run cell-level post-stratification. |
 | Compose | `wf_compose()` | Compose multiple weighting stages into one auditable result. |
+| Fusion | `wf_blend()` | Fuse online and offline estimates at the estimator level. |
 | Diagnose | `wf_diagnose()` | Diagnose calibrated weights and margins. |
 
 All exported functions ship with full documentation. From R, use `?wf_rake`,

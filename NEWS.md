@@ -1,5 +1,16 @@
 # weightflow (development version)
 
+# weightflow 0.5.0
+
+Dual-source fusion. Adds estimator-level online/offline fusion without stacking
+row-level weights.
+
+* Added `wf_blend()` for estimator-level dual-source fusion of online and
+  offline `wf_weights` objects.
+* Added `wf_blend_result` with source estimates, applied lambda values,
+  diagnostics, sensitivity output, and provenance.
+* Added support for `neff`, `inverse_variance`, and `fixed` lambda strategies.
+
 # weightflow 0.4.0
 
 Weight pipeline ledger. Adds a composition layer for chaining weighting stages

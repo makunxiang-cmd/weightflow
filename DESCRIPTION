@@ -1,6 +1,6 @@
 Package: weightflow
 Title: Workflow-Oriented Survey Weight Calibration
-Version: 0.4.0
+Version: 0.5.0
 Authors@R: person(given = "Weightflow", family = "Contributors", email = "weightflow-maintainers@example.com", role = c("aut", "cre"))
 Author: Weightflow Contributors
 Maintainer: Weightflow Contributors <weightflow-maintainers@example.com>
