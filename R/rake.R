@@ -251,6 +251,30 @@ wf_rake <- function(sample, target, id = NULL,
 #' @return Invisibly returns `x`.
 #' @export
 print.wf_weights <- function(x, ...) {
+  if (!is.null(x$provenance$method) && x$provenance$method == "propensity") {
+    cat(sprintf(
+      "<wf_weights>  %d unit(s) in %d group(s); method: propensity (%s / %s)\n",
+      nrow(x$data),
+      nrow(x$log),
+      x$provenance$fit_method,
+      x$provenance$weight
+    ))
+    cat(sprintf(
+      "  weight range [%.4g, %.4g]; stabilized: %s; trimmed: %d; elapsed %.2fs\n",
+      min(x$data$weight),
+      max(x$data$weight),
+      x$provenance$stabilize,
+      x$provenance$trimmed,
+      x$provenance$elapsed
+    ))
+    cat(sprintf(
+      "  overlap: %d/%d online unit(s) above p > %.2f boundary\n",
+      x$overlap$n_boundary,
+      x$overlap$n_online,
+      x$overlap$threshold
+    ))
+    return(invisible(x))
+  }
   if (!is.null(x$provenance$method) && x$provenance$method == "poststrat") {
     cat(sprintf(
       "<wf_weights>  %d unit(s) in %d group(s); method: poststrat\n",
