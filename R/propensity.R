@@ -138,3 +138,135 @@ wf_target_propensity <- function(online, reference, formula,
     )
   ), class = "wf_target_propensity")
 }
+
+#' Correct a non-probability sample by inverse-propensity pseudo-weighting.
+#'
+#' Fits the membership model declared in a [wf_target_propensity()] object and
+#' converts each online unit's fitted membership probability into a pseudo-design
+#' weight. The result is a `wf_weights` object suitable as an `init_weight` for
+#' [wf_rake()] / [wf_poststrat()] and as a stage in [wf_compose()].
+#'
+#' @param target A `wf_target_propensity` object.
+#' @param weight Pseudo-weight form. Only `"ipw"` is executable in this release;
+#'   `"kernel"` / `"matching"` are reserved.
+#' @param stabilize Use stabilized IPW (`pi_bar / phat`) to tame extreme weights.
+#' @param trim Optional positive scalar: clamp weights above `trim * median(w)`.
+#' @return A `wf_weights` object with `$overlap` and `$balance` diagnostics.
+#' @export
+wf_propensity <- function(target,
+                          weight = c("ipw", "kernel", "matching"),
+                          stabilize = TRUE, trim = NULL) {
+  if (!inherits(target, "wf_target_propensity")) {
+    wf_abort("`target` must be a wf_target_propensity object.", "wf_error_input")
+  }
+  weight <- match.arg(weight)
+  if (weight != "ipw") {
+    wf_abort(
+      sprintf("weight = '%s' is not yet supported; only 'ipw' is implemented in this release.",
+              weight),
+      "wf_error_input", list(weight = weight)
+    )
+  }
+  if (target$method != "logit") {
+    wf_abort(
+      sprintf("method = '%s' is not yet supported; only 'logit' is implemented in this release.",
+              target$method),
+      "wf_error_input", list(method = target$method)
+    )
+  }
+  if (!is.null(trim) &&
+      (length(trim) != 1 || !is.finite(trim) || trim <= 0)) {
+    wf_abort("`trim` must be a single positive number or NULL.",
+             "wf_error_input", list(trim = trim))
+  }
+  t0 <- Sys.time()
+
+  stacked <- target$stacked
+  membership <- target$membership
+  by <- target$by
+  fml <- stats::reformulate(target$predictors, response = membership)
+
+  grp <- if (is.null(by)) rep(".all", nrow(stacked)) else .chr(stacked[[by]])
+  is_online <- stacked$.wf_source == "online"
+
+  phat <- rep(NA_real_, nrow(stacked))
+  for (g in unique(grp)) {
+    sel <- grp == g
+    n_on <- sum(sel & is_online)
+    n_ref <- sum(sel & !is_online)
+    if (n_on == 0 || n_ref == 0) {
+      wf_abort(
+        sprintf("Group '%s' is missing an entire source (online: %d, reference: %d).",
+                g, n_on, n_ref),
+        "wf_error_overlap",
+        list(group = g, n_online = n_on, n_reference = n_ref)
+      )
+    }
+    fit <- stats::glm(fml, family = stats::binomial(),
+                      data = stacked[sel, , drop = FALSE])
+    phat[sel] <- stats::fitted(fit)
+  }
+
+  p_on <- phat[is_online]
+  grp_on <- grp[is_online]
+
+  raw <- 1 / p_on
+  if (stabilize) {
+    pibar <- tapply(stacked[[membership]], grp, mean)
+    raw <- as.numeric(pibar[grp_on]) / p_on
+  }
+
+  trimmed <- 0L
+  if (!is.null(trim)) {
+    cap <- trim * stats::median(raw)
+    hits <- raw > cap
+    trimmed <- sum(hits)
+    raw[hits] <- cap
+  }
+
+  w <- raw
+  for (g in unique(grp_on)) {
+    sel <- grp_on == g
+    w[sel] <- w[sel] / mean(w[sel])
+  }
+
+  data <- data.frame(
+    id = target$online_ids,
+    group = grp_on,
+    weight = w,
+    feature = 1 / w,
+    stringsAsFactors = FALSE
+  )
+
+  log <- data.frame(
+    group = unique(grp_on),
+    n = as.integer(table(grp_on)[unique(grp_on)]),
+    stringsAsFactors = FALSE
+  )
+
+  structure(list(
+    data = data,
+    log = log,
+    achieved = NULL,
+    overlap = NULL,
+    balance = NULL,
+    provenance = list(
+      method = "propensity",
+      fit_method = target$method,
+      weight = weight,
+      stabilize = stabilize,
+      trim = trim,
+      trimmed = trimmed,
+      by = by,
+      id = target$id,
+      predictors = target$predictors,
+      assumption = paste(
+        "Inverse-propensity correction is unbiased only if the model",
+        "covariates capture the full online selection mechanism."
+      ),
+      created = t0,
+      elapsed = as.numeric(Sys.time() - t0, units = "secs"),
+      package_version = .wf_propensity_package_version()
+    )
+  ), class = "wf_weights")
+}
