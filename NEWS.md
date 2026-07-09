@@ -1,3 +1,16 @@
+# weightflow 0.8.0
+
+Bounded calibration. Adds a Deville-Sarndal calibration engine to
+`wf_calibrate()` with linear (GREG) and bounded (logit) distances.
+
+* Added `wf_calibrate(method = "greg")` for the linear GREG estimator.
+* Added `wf_calibrate(method = "logit", bounds = c(L, U))` for calibration with
+  weights bounded within `(L, U)` by construction, merging margin alignment and
+  weight trimming into one step.
+* Both calibrate to the existing `wf_target` margins, honour `init_weight`, and
+  return the standard `wf_weights` so they compose and support replicate
+  variance.
+
 # weightflow 0.7.0
 
 Variance and uncertainty. Adds replicate-weight variance that re-runs the

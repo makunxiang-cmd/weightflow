@@ -11,10 +11,11 @@ wf_calibrate(sample, target, method = "raking", ...)
 
 \item{target}{A \code{wf_target} object.}
 
-\item{method}{Calibration method, either \code{"raking"} or \code{"poststrat"}.}
+\item{method}{Calibration method: \code{"raking"}, \code{"poststrat"}, \code{"greg"}
+(linear GREG), or \code{"logit"} (bounded, requires \code{bounds = c(L, U)}).}
 
-\item{...}{Method-specific arguments passed to \code{wf_rake()} or
-\code{wf_poststrat()}.}
+\item{...}{Method-specific arguments. For \code{"greg"} / \code{"logit"}: \code{bounds},
+\code{init_weight}, \code{na}, \code{id}, \code{tol}, \code{max_iter}, \code{precheck}.}
 }
 \value{
 A \code{wf_weights} object.
