@@ -56,3 +56,33 @@
   list(n = n, stratum = stratum, cluster = cluster,
        strata = strata_levels, psu = psu)
 }
+
+#' Rao-Wu rescaled bootstrap multipliers.
+#'
+#' @param design A `.wf_design()` result.
+#' @param R Number of replicates.
+#' @param seed Optional integer seed.
+#' @keywords internal
+#' @noRd
+.wf_boot_mult <- function(design, R, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  n <- design$n
+  mult <- matrix(1, n, R)
+  for (h in design$strata) {
+    psus <- design$psu[[h]]
+    nh <- length(psus)
+    if (nh < 2) next
+    units_by_psu <- lapply(psus, function(p) {
+      which(design$stratum == h & design$cluster == p)
+    })
+    for (r in seq_len(R)) {
+      draw <- sample.int(nh, nh - 1, replace = TRUE)
+      counts <- tabulate(draw, nbins = nh)
+      a <- (nh / (nh - 1)) * counts
+      for (i in seq_len(nh)) {
+        mult[units_by_psu[[i]], r] <- a[i]
+      }
+    }
+  }
+  list(mult = mult, scale = 1 / R, rscales = rep(1, R))
+}
