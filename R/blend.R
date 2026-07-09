@@ -559,6 +559,126 @@
   out
 }
 
+#' Warn for one-source fusion cells.
+#'
+#' @param cells Cell result table.
+#' @keywords internal
+#' @noRd
+.wf_blend_warn_one_source <- function(cells) {
+  n <- sum(cells$lambda_reason %in% c("online_only", "offline_only"))
+  if (n > 0) {
+    wf_warn(
+      sprintf("%d fusion cell(s) are estimated from one source only.", n),
+      "wf_warning_quality",
+      list(n = n)
+    )
+  }
+  invisible(n)
+}
+
+#' Build summary rows from fused cell estimates.
+#'
+#' @param cells Fused estimate cells.
+#' @keywords internal
+#' @noRd
+.wf_blend_summary <- function(cells) {
+  group_rows <- lapply(split(cells, cells$group), function(part) {
+    valid <- is.finite(part$estimate) &
+      is.finite(part$cell_weight) &
+      part$cell_weight > 0
+    estimate <- if (any(valid)) {
+      sum(part$estimate[valid] * part$cell_weight[valid]) / sum(part$cell_weight[valid])
+    } else {
+      NA_real_
+    }
+    data.frame(
+      group = part$group[[1]],
+      estimate = estimate,
+      cell_weight = sum(part$cell_weight[valid]),
+      n_cells = nrow(part),
+      stringsAsFactors = FALSE
+    )
+  })
+  group_summary <- do.call(rbind, group_rows)
+  rownames(group_summary) <- NULL
+
+  valid <- is.finite(cells$estimate) &
+    is.finite(cells$cell_weight) &
+    cells$cell_weight > 0
+  overall <- data.frame(
+    group = "__overall__",
+    estimate = if (any(valid)) {
+      sum(cells$estimate[valid] * cells$cell_weight[valid]) / sum(cells$cell_weight[valid])
+    } else {
+      NA_real_
+    },
+    cell_weight = sum(cells$cell_weight[valid]),
+    n_cells = nrow(cells),
+    stringsAsFactors = FALSE
+  )
+  rbind(group_summary, overall)
+}
+
+#' Build global fixed-lambda sensitivity output.
+#'
+#' @param cells Fused estimate cells.
+#' @keywords internal
+#' @noRd
+.wf_blend_sensitivity <- function(cells) {
+  sweep_values <- seq(0.3, 0.9, by = 0.1)
+  rows <- lapply(sweep_values, function(lambda_value) {
+    tmp <- cells
+    tmp$estimate <- lambda_value * tmp$estimate_online +
+      (1 - lambda_value) * tmp$estimate_offline
+    tmp$cell_weight <- lambda_value * tmp$weight_sum_online +
+      (1 - lambda_value) * tmp$weight_sum_offline
+    summary <- .wf_blend_summary(tmp)
+    data.frame(
+      lambda = lambda_value,
+      summary,
+      stringsAsFactors = FALSE
+    )
+  })
+  out <- do.call(rbind, rows)
+  rownames(out) <- NULL
+  out
+}
+
+#' Print a blend result.
+#'
+#' @param x A `wf_blend_result` object.
+#' @param ... Unused.
+#' @return Invisibly returns `x`.
+#' @export
+print.wf_blend_result <- function(x, ...) {
+  n_cells <- if (!is.null(x$estimates) && nrow(x$estimates) > 0) {
+    nrow(x$estimates)
+  } else if (!is.null(x$cell_weights)) {
+    nrow(x$cell_weights)
+  } else {
+    0L
+  }
+  lambda_range <- if (!is.null(x$lambda) && nrow(x$lambda) > 0) {
+    sprintf("[%.4g, %.4g]", min(x$lambda$lambda), max(x$lambda$lambda))
+  } else {
+    "[NA, NA]"
+  }
+  warning_count <- sum(
+    c(
+      x$diagnostics$trimmed_lambda_count,
+      x$diagnostics$one_source_cell_count
+    ),
+    na.rm = TRUE
+  )
+  cat(sprintf(
+    "<wf_blend_result> %d cell(s); lambda %s; warnings: %d\n",
+    n_cells,
+    lambda_range,
+    warning_count
+  ))
+  invisible(x)
+}
+
 #' Blend online and offline calibrated estimates
 #'
 #' Combines two `wf_weights` sources at the estimator level. Each source is
@@ -626,38 +746,53 @@ wf_blend <- function(online, offline, by_cell,
       (1 - cells$lambda) * cells$weight_sum_offline
   }
 
-  structure(
-    list(
-      estimates = if (is.null(outcome)) data.frame() else cells,
-      summary = data.frame(),
-      lambda = cells[c("group", by_cell, "lambda", "lambda_reason", "lambda_trimmed")],
-      diagnostics = list(
-        source_support = cells,
-        trimmed_lambda_count = sum(cells$lambda_trimmed),
-        one_source_cell_count = sum(cells$lambda_reason %in% c("online_only", "offline_only"))
-      ),
-      sensitivity = if (sensitivity) data.frame() else NULL,
-      provenance = list(
-        method = "blend",
-        by_cell = by_cell,
-        outcome = outcome,
-        lambda = lambda,
-        level = level,
-        trim_lambda = trim_lambda,
-        sources = list(
-          online = online$provenance,
-          offline = offline$provenance
-        ),
-        assumptions = c(
-          "Convex fusion assumes both source estimates are approximately unbiased for the cell quantity.",
-          "Online-source unbiasedness depends on calibration variables explaining the selection mechanism.",
-          "Sensitivity output exposes dependence on lambda choices."
-        ),
-        created = t0,
-        elapsed = as.numeric(Sys.time() - t0, units = "secs"),
-        package_version = .wf_blend_package_version()
-      )
+  .wf_blend_warn_one_source(cells)
+
+  if (!is.null(outcome)) {
+    summary <- .wf_blend_summary(cells)
+    sensitivity_out <- if (sensitivity) .wf_blend_sensitivity(cells) else NULL
+    cell_weights <- NULL
+  } else {
+    cells$fused_cell_total <- cells$lambda * cells$weight_sum_online +
+      (1 - cells$lambda) * cells$weight_sum_offline
+    summary <- data.frame()
+    sensitivity_out <- NULL
+    cell_weights <- cells
+  }
+
+  out <- list(
+    estimates = if (is.null(outcome)) data.frame() else cells,
+    summary = summary,
+    lambda = cells[c("group", by_cell, "lambda", "lambda_reason", "lambda_trimmed")],
+    diagnostics = list(
+      source_support = cells,
+      trimmed_lambda_count = sum(cells$lambda_trimmed),
+      one_source_cell_count = sum(cells$lambda_reason %in% c("online_only", "offline_only"))
     ),
-    class = "wf_blend_result"
+    sensitivity = sensitivity_out,
+    provenance = list(
+      method = "blend",
+      by_cell = by_cell,
+      outcome = outcome,
+      lambda = lambda,
+      level = level,
+      trim_lambda = trim_lambda,
+      sources = list(
+        online = online$provenance,
+        offline = offline$provenance
+      ),
+      assumptions = c(
+        "Convex fusion assumes both source estimates are approximately unbiased for the cell quantity.",
+        "Online-source unbiasedness depends on calibration variables explaining the selection mechanism.",
+        "Sensitivity output exposes dependence on lambda choices."
+      ),
+      created = t0,
+      elapsed = as.numeric(Sys.time() - t0, units = "secs"),
+      package_version = .wf_blend_package_version()
+    )
   )
+  if (!is.null(cell_weights)) {
+    out$cell_weights <- cell_weights
+  }
+  structure(out, class = "wf_blend_result")
 }
