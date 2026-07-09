@@ -44,7 +44,7 @@ remotes::install_github("makunxiang-cmd/weightflow")
 Or build from a source tarball:
 
 ```r
-install.packages("weightflow_0.5.0.tar.gz", repos = NULL, type = "source")
+install.packages("weightflow_0.6.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ## Workflow at a glance
@@ -191,6 +191,28 @@ blend$estimates
 blend$lambda
 ```
 
+## Non-Probability Correction
+
+A self-selected online sample can be corrected against an offline probability
+reference by modelling its selection propensity. `wf_target_propensity()` stacks
+the two samples into a membership-model specification; `wf_propensity()` fits a
+base-R logistic model and emits inverse-propensity pseudo-design weights (a
+`wf_weights` stage) that feed calibration as `init_weight` and compose via
+`wf_compose()`. Overlap and covariate-balance diagnostics are attached, and poor
+common support raises a `wf_warning_quality`.
+
+```r
+target <- wf_target_propensity(online, reference, member ~ gender + age)
+stage1 <- wf_propensity(target, stabilize = TRUE)
+
+stage1$overlap    # common-support report
+stage1$balance    # covariate SMDs, unweighted vs pseudo-weighted
+
+online$pw <- stage1$data$weight
+calibrated <- wf_poststrat(online, pop_target, min_cell = 20, ladder = ladder,
+                           init_weight = "pw", id = "id")
+```
+
 ## Function reference
 
 | Stage | Function | Purpose |
@@ -210,6 +232,8 @@ blend$lambda
 | Calibrate | `wf_poststrat()` | Run cell-level post-stratification. |
 | Compose | `wf_compose()` | Compose multiple weighting stages into one auditable result. |
 | Fusion | `wf_blend()` | Fuse online and offline estimates at the estimator level. |
+| Propensity | `wf_target_propensity()` | Stack an online sample and a probability reference into a membership-model spec. |
+| Propensity | `wf_propensity()` | Emit inverse-propensity pseudo-design weights with overlap and balance diagnostics. |
 | Diagnose | `wf_diagnose()` | Diagnose calibrated weights and margins. |
 
 All exported functions ship with full documentation. From R, use `?wf_rake`,

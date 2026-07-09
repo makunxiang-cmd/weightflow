@@ -897,28 +897,34 @@ test_that("wf_propensity output composes via wf_compose", {
   expect_equal(composed$data$weight, stage1$data$weight * 2, tolerance = 1e-8)
 })
 
-test_that("wf_propensity weights feed wf_rake as init_weight", {
-  tgt <- make_prop_target()
-  w <- suppressWarnings(wf_propensity(tgt))
-
-  sample <- data.frame(
-    age5 = rep(c("a", "b"), 4),
-    pw = w$data$weight,
+test_that("wf_propensity weights feed wf_poststrat as init_weight", {
+  # wf_poststrat is the calibration stage that exposes the init_weight seam
+  # (wf_rake does not take init_weight).
+  fixture <- make_poststrat_fixture()
+  online <- fixture$sample[, c("gender", "age")]
+  reference <- data.frame(
+    gender = rep(c("female", "male"), each = 4),
+    age = rep(c("young", "old"), times = 4),
     stringsAsFactors = FALSE
   )
-  dims <- wf_dims(age5 = c("a", "b"))
-  target <- wf_target_population(
-    dims,
-    age5 = c(a = 4, b = 4)
+  tgt <- wf_target_propensity(online, reference, member ~ gender + age)
+  pw <- suppressWarnings(wf_propensity(tgt))
+
+  fixture$sample$pw <- pw$data$weight  # online == sample row order
+  weights <- wf_poststrat(
+    fixture$sample,
+    fixture$target,
+    min_cell = 2,
+    ladder = fixture$ladder,
+    init_weight = "pw",
+    id = "id"
   )
-  raked <- wf_rake(sample, target, dims, init_weight = "pw")
-  expect_s3_class(raked, "wf_weights")
+  expect_s3_class(weights, "wf_weights")
 })
 ```
 
-Note: verify the exact `wf_dims()` / `wf_target_population()` / `wf_rake()` call
-shape against `tests/testthat/test-rake-diagnostics.R` and adjust argument names
-to match before running (these constructors predate this feature).
+Note: the `init_weight` seam is on `wf_poststrat()`, not `wf_rake()`. The
+`make_poststrat_fixture()` helper lives in `tests/testthat/helper-fixtures.R`.
 
 - [ ] **Step 2: Confirm the calibration API shape, then run**
 
