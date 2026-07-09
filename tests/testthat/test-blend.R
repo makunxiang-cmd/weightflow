@@ -59,6 +59,13 @@ test_that("wf_blend validates source objects and required columns", {
     class = "wf_error_schema"
   )
 
+  missing_weight <- offline
+  missing_weight$data$weight <- NULL
+  expect_error(
+    wf_blend(online, missing_weight, by_cell = "cell", outcome = "outcome"),
+    class = "wf_error_schema"
+  )
+
   missing_outcome <- online
   missing_outcome$data$outcome <- NULL
   expect_error(
