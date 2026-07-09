@@ -41,10 +41,11 @@
 #' @param total Group total.
 #' @keywords internal
 #' @noRd
-.wf_expand_group <- function(rows_chr, na_mask, margins, total) {
+.wf_expand_group <- function(rows_chr, na_mask, margins, total, init = NULL) {
   n <- nrow(rows_chr)
   D <- ncol(rows_chr)
   base_w <- total / n
+  rel <- if (is.null(init) || mean(init) == 0) rep(1, n) else init / mean(init)
   pid <- integer(0)
   vals <- vector("list", D)
   w0 <- numeric(0)
@@ -58,7 +59,7 @@
     for (d in seq_len(D)) {
       vals[[d]] <- rows_chr[complete, d]
     }
-    w0 <- rep(base_w, length(complete))
+    w0 <- base_w * rel[complete]
   }
 
   incomplete <- which(rowSums(na_mask) > 0)
@@ -85,7 +86,10 @@
           }
         )
       }
-      w0 <- c(w0, rep(base_w * share, times = length(rows)))
+      w0 <- c(
+        w0,
+        base_w * rel[rep(rows, each = K)] * rep(share, times = length(rows))
+      )
     }
   }
   list(pid = pid, vals = vals, w0 = w0, n_persons = n)
@@ -104,13 +108,16 @@
 #' @param tol Convergence tolerance.
 #' @param max_iter Maximum iterations.
 #' @param precheck Whether to run `wf_precheck()` before raking.
+#' @param init_weight Optional column of initial weights. If `NULL`, raking
+#'   starts from uniform weights (unchanged behaviour).
 #'
 #' @return A `wf_weights` object.
 #' @export
 wf_rake <- function(sample, target, id = NULL,
                     na = c("fractional", "drop", "error"),
                     trim = NULL, trim_cycles = 4,
-                    tol = 1e-6, max_iter = 200, precheck = TRUE) {
+                    tol = 1e-6, max_iter = 200, precheck = TRUE,
+                    init_weight = NULL) {
   na <- match.arg(na)
   t0 <- Sys.time()
 
@@ -136,6 +143,22 @@ wf_rake <- function(sample, target, id = NULL,
     sample <- sample[keep, , drop = FALSE]
   }
 
+  if (is.null(init_weight)) {
+    iw <- rep(1, nrow(sample))
+  } else {
+    if (length(init_weight) != 1 || !is.character(init_weight) ||
+        !init_weight %in% names(sample)) {
+      wf_abort(sprintf("init_weight column '%s' not found in sample.",
+                       as.character(init_weight)[1]),
+               "wf_error_schema", list(init_weight = init_weight))
+    }
+    iw <- as.numeric(sample[[init_weight]])
+    if (any(!is.finite(iw)) || any(iw < 0)) {
+      wf_abort("init_weight must be non-negative and finite.",
+               "wf_error_input", list(init_weight = init_weight))
+    }
+  }
+
   gkey <- .wf_group_keys(sample, target$by)
   ids <- if (is.null(id)) seq_len(nrow(sample)) else sample[[id]]
 
@@ -151,7 +174,7 @@ wf_rake <- function(sample, target, id = NULL,
     }
     na_mask <- is.na(rows)
 
-    ex <- .wf_expand_group(rows, na_mask, gr$margins, gr$total)
+    ex <- .wf_expand_group(rows, na_mask, gr$margins, gr$total, init = iw[sel])
     idx <- lapply(seq_along(dvars), function(d) {
       match(ex$vals[[d]], names(gr$margins[[d]]))
     })
@@ -234,6 +257,7 @@ wf_rake <- function(sample, target, id = NULL,
       mode = target$mode,
       na = na,
       trim = trim,
+      init_weight = init_weight,
       tol = tol,
       max_iter = max_iter,
       collapsed = target$meta$collapsed,
