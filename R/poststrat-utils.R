@@ -223,6 +223,7 @@
         if (anc %in% names(tb) && tb[anc] > 0) {
           redist[[length(redist) + 1]] <- data.frame(
             group = group,
+            raw_cell = res$raw_key[i],
             orphan_cell = res$resolved[i],
             receiving_cell = anc,
             ancestor_level = lv,
@@ -253,6 +254,7 @@
       recv <- res$resolved[supported[which.max(counts)]]
       redist[[length(redist) + 1]] <- data.frame(
         group = group,
+        raw_cell = res$raw_key[i],
         orphan_cell = res$resolved[i],
         receiving_cell = recv,
         ancestor_level = -1L,

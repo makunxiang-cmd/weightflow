@@ -251,6 +251,28 @@ wf_rake <- function(sample, target, id = NULL,
 #' @return Invisibly returns `x`.
 #' @export
 print.wf_weights <- function(x, ...) {
+  if (!is.null(x$provenance$method) && x$provenance$method == "poststrat") {
+    cat(sprintf(
+      "<wf_weights>  %d unit(s) in %d group(s); method: poststrat\n",
+      nrow(x$data),
+      nrow(x$log)
+    ))
+    cat(sprintf(
+      "  weight range [%.4g, %.4g]; elapsed %.2fs\n",
+      min(x$data$weight),
+      max(x$data$weight),
+      x$provenance$elapsed
+    ))
+    cat(sprintf(
+      "  cells: %d raw -> %d resolved (median); groups using province granularity: %d\n",
+      stats::median(x$log$n_cells_raw),
+      stats::median(x$log$n_cells_resolved),
+      sum(x$log$granularity_used == "province")
+    ))
+    cat(sprintf("  max group-total deviation: %.2e\n", max(x$log$total_dev)))
+    return(invisible(x))
+  }
+
   cat(sprintf(
     "<wf_weights>  %d unit(s) in %d group(s); mode: %s; converged: %d/%d\n",
     nrow(x$data),
