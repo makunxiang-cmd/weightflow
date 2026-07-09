@@ -44,7 +44,7 @@ remotes::install_github("makunxiang-cmd/weightflow")
 Or build from a source tarball:
 
 ```r
-install.packages("weightflow_0.7.0.tar.gz", repos = NULL, type = "source")
+install.packages("weightflow_0.8.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ## Workflow at a glance
@@ -233,6 +233,20 @@ reps <- wf_replicates(sample, refit, method = "bootstrap", R = 500,
 wf_variance(reps, function(w, d) sum(w * d$y) / sum(w), sample)
 ```
 
+## Bounded Calibration
+
+`wf_calibrate()` also offers general calibration beyond raking and
+post-stratification. `method = "greg"` is the linear GREG estimator;
+`method = "logit"` produces weights bounded within `bounds = c(L, U)` by
+construction, merging margin alignment and weight trimming into one step.
+
+```r
+# weights bounded between 0.3x and 3x the base weight
+w <- wf_calibrate(sample, target, method = "logit", bounds = c(0.3, 3),
+                  init_weight = "design_w", id = "id")
+w$log   # per-group convergence and realized weight-ratio range
+```
+
 ## Function reference
 
 | Stage | Function | Purpose |
@@ -246,7 +260,8 @@ wf_variance(reps, function(w, d) sum(w * d$y) / sum(w), sample)
 | Collapse | `wf_collapse_ladder()` | Declare a post-stratification collapse ladder. |
 | Collapse | `wf_suggest_collapse()` | Suggest collapse plans from precheck findings. |
 | Collapse | `wf_apply_collapse()` | Apply a collapse plan to sample and target. |
-| Calibrate | `wf_calibrate()` | Dispatch to a calibration method (raking or post-strat). |
+| Calibrate | `wf_calibrate()` | Dispatch to a calibration method (raking, post-strat, greg, or logit). |
+| Calibrate | `wf_calibrate(method = "greg"/"logit")` | Linear GREG or bounded (logit) calibration to the target margins. |
 | Calibrate | `wf_rake()` | Grouped raking (iterative proportional fitting). |
 | Calibrate | `wf_plan_poststrat()` | Plan post-stratification cell resolution. |
 | Calibrate | `wf_poststrat()` | Run cell-level post-stratification. |
