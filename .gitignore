@@ -14,3 +14,4 @@ tmp/
 *.tar.gz
 *.Rcheck/
 ..Rcheck/
+build/

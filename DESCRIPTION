@@ -8,6 +8,8 @@ Description: Provides a disciplined precheck, execution, and diagnostics workflo
     for survey weighting and raking with schema-agnostic dimensions and canonical
     target objects.
 License: MIT + file LICENSE
+URL: https://github.com/makunxiang-cmd/weightflow
+BugReports: https://github.com/makunxiang-cmd/weightflow/issues
 Encoding: UTF-8
 Depends:
     R (>= 3.5.0)

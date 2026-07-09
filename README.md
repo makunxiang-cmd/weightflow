@@ -1,23 +1,63 @@
 # weightflow
 
-`weightflow` is a workflow-oriented R package for survey weighting and raking.
-It emphasizes a disciplined precheck -> execute -> diagnose loop for
-multi-source survey calibration.
+<!-- badges: start -->
+[![Project Status: WIP](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![R >= 3.5.0](https://img.shields.io/badge/R-%3E%3D%203.5.0-blue.svg)](https://cran.r-project.org/)
+<!-- badges: end -->
 
-## Status
+**English** | [简体中文](README.zh-CN.md)
 
-This repository is in the foundation API build stage. The 0.3.0 scope adds
-manual targets, target shrinkage, collapse suggestions, collapse-plan
-application, and unified calibration dispatch while preserving the existing
-raking and post-stratification engines.
+`weightflow` is a workflow-oriented R package for survey weighting and raking. It
+emphasizes a disciplined **precheck → execute → diagnose** loop for multi-source
+survey calibration, with schema-agnostic dimensions and canonical target objects
+that stay consistent across raking and post-stratification engines.
 
-## Data Policy
+## Why weightflow
 
-Private source spreadsheets and RData files are not committed and are not
-included in package builds. Examples use the simulated `weightflow_example`
-dataset.
+Most weighting scripts fail silently: a category is missing from the target, a
+cell is too thin to estimate, or a group total drifts after trimming. `weightflow`
+turns those failure modes into first-class, reviewable steps.
 
-## Minimal Example
+- **Precheck before you calibrate.** `wf_precheck()` compares the sample against
+  the target and reports incompatibilities before any weights are computed.
+- **One target contract, many sources.** Build a canonical `wf_target` from
+  external population data, a weighted reference sample, or a manual margin table.
+- **Reviewable category collapsing.** Declare a collapse ladder up front, get
+  suggested merges from precheck findings, and apply them consistently to both
+  sample and target.
+- **Raking and post-stratification behind one dispatcher.** `wf_calibrate()`
+  returns the same `wf_weights` contract regardless of method.
+- **Diagnostics as a habit.** `wf_diagnose()` closes every workflow with weight
+  and margin diagnostics.
+
+## Installation
+
+Install the development version from GitHub:
+
+```r
+# install.packages("remotes")
+remotes::install_github("makunxiang-cmd/weightflow")
+```
+
+Or build from a source tarball:
+
+```r
+install.packages("weightflow_0.3.0.tar.gz", repos = NULL, type = "source")
+```
+
+## Workflow at a glance
+
+```
+declare dims ──► build target ──► precheck ──► (collapse) ──► calibrate ──► diagnose
+   wf_dims()      wf_target_*()   wf_precheck()  wf_suggest_    wf_rake() /   wf_diagnose()
+                                                 collapse()     wf_poststrat()
+                                                 wf_apply_      wf_calibrate()
+                                                 collapse()
+```
+
+## Quick start
 
 ```r
 library(weightflow)
@@ -40,7 +80,7 @@ weights <- wf_rake(weightflow_example$sample, target, id = "id")
 wf_diagnose(weights, target = target)
 ```
 
-## Post-Stratification Example
+## Post-stratification
 
 Post-stratification uses joint population cells instead of marginal totals. Build
 the target with `keep_joint = TRUE`, declare a reviewable collapse ladder, then
@@ -79,10 +119,11 @@ post <- wf_poststrat(
 wf_diagnose(post)
 ```
 
-## Foundation API Example
+## Foundation API
 
-Manual margins can be converted directly to a target and then calibrated through
-the unified dispatcher.
+Manual margins can be converted directly to a target and calibrated through the
+unified dispatcher. A target can also be shrunk toward a reference target before
+calibration.
 
 ```r
 manual <- data.frame(
@@ -100,3 +141,53 @@ weights_manual <- wf_calibrate(
 )
 wf_diagnose(weights_manual)
 ```
+
+## Function reference
+
+| Stage | Function | Purpose |
+| --- | --- | --- |
+| Dimensions | `wf_dims()` | Declare calibration dimensions and optional collapse ladders. |
+| Target | `wf_target_population()` | Build a canonical target from external population data. |
+| Target | `wf_target_reference()` | Build a target from a weighted reference sample. |
+| Target | `wf_target_manual()` | Build a target from a manual long margin table. |
+| Target | `wf_target_shrink()` | Shrink a target toward a reference target. |
+| Precheck | `wf_precheck()` | Check sample/target compatibility before calibration. |
+| Collapse | `wf_collapse_ladder()` | Declare a post-stratification collapse ladder. |
+| Collapse | `wf_suggest_collapse()` | Suggest collapse plans from precheck findings. |
+| Collapse | `wf_apply_collapse()` | Apply a collapse plan to sample and target. |
+| Calibrate | `wf_calibrate()` | Dispatch to a calibration method (raking or post-strat). |
+| Calibrate | `wf_rake()` | Grouped raking (iterative proportional fitting). |
+| Calibrate | `wf_plan_poststrat()` | Plan post-stratification cell resolution. |
+| Calibrate | `wf_poststrat()` | Run cell-level post-stratification. |
+| Diagnose | `wf_diagnose()` | Diagnose calibrated weights and margins. |
+
+All exported functions ship with full documentation. From R, use `?wf_rake`,
+`help(package = "weightflow")`, or `example(wf_target_population)`.
+
+## Data policy
+
+Private source spreadsheets and RData files under `private-data/` are **not
+committed** and are **not** included in package builds. All examples and tests use
+the simulated `weightflow_example` dataset, generated by
+`data-raw/make-weightflow-example.R`.
+
+## Project status
+
+This repository is in the foundation API build stage. The 0.3.0 scope adds manual
+targets, target shrinkage, collapse suggestions, collapse-plan application, and
+unified calibration dispatch while preserving the existing raking and
+post-stratification engines. See [`NEWS.md`](NEWS.md) for the full changelog.
+
+## Contributing
+
+Contributions are welcome. Please read
+[`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) for development setup, the
+test-driven workflow, and the language policy, and review the
+[Code of Conduct](.github/CODE_OF_CONDUCT.md) before opening an issue or pull
+request. Repository conventions for automated agents are documented in
+[`AGENTS.md`](AGENTS.md).
+
+## License
+
+Released under the [MIT License](LICENSE). © 2026 makunxiang-cmd and weightflow
+contributors.

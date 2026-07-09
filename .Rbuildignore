@@ -10,3 +10,5 @@
 ^README\.zh-CN\.md$
 ^AGENTS\.md$
 ^.*Rcheck$
+^build$
+^\.github$
