@@ -36,3 +36,24 @@
     }
   )
 }
+
+#' Build the calibration constraint matrix and target vector for one group.
+#'
+#' @param sub Group's (complete-case) sample subset.
+#' @param dvars Calibration dimension names.
+#' @param gr A target group: `list(total, margins)`.
+#' @keywords internal
+#' @noRd
+.wf_lincal_build <- function(sub, dvars, gr) {
+  n <- nrow(sub)
+  cols <- list(rep(1, n))
+  t <- gr$total
+  for (d in dvars) {
+    lev <- names(gr$margins[[d]])
+    for (l in lev[-1]) {   # drop the first level as the reference
+      cols[[length(cols) + 1]] <- as.numeric(.chr(sub[[d]]) == l)
+      t <- c(t, gr$margins[[d]][[l]])
+    }
+  }
+  list(X = do.call(cbind, cols), t = t)
+}
