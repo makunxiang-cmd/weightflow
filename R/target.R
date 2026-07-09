@@ -11,6 +11,7 @@
 #' @param scale Target scale, one of `"population"`, `"sample"`, or `"custom"`.
 #' @param sample Required when `scale = "sample"`.
 #' @param totals Required when `scale = "custom"`.
+#' @param keep_joint Whether to retain per-group joint population cells.
 #'
 #' @return A `wf_target` object.
 #' @export
@@ -22,7 +23,8 @@
 wf_target_population <- function(pop, key_map, count, dims,
                                  by = NULL, by_key = NULL,
                                  scale = c("population", "sample", "custom"),
-                                 sample = NULL, totals = NULL) {
+                                 sample = NULL, totals = NULL,
+                                 keep_joint = FALSE) {
   scale <- match.arg(scale)
   if (!is.data.frame(pop)) {
     wf_abort("`pop` must be a data.frame.", "wf_error_input")
@@ -55,6 +57,7 @@ wf_target_population <- function(pop, key_map, count, dims,
 
   gkey <- .wf_group_keys(pop, by, by_key)
   groups <- list()
+  joint <- if (keep_joint) list() else NULL
   for (g in sort(unique(gkey))) {
     sel <- gkey == g
     margins <- list()
@@ -64,6 +67,18 @@ wf_target_population <- function(pop, key_map, count, dims,
       margins[[d]] <- .wf_margin_vector(m[m > 0])
     }
     groups[[g]] <- list(total = sum(cnt[sel]), margins = margins)
+
+    if (keep_joint) {
+      j <- data.frame(
+        lapply(dvars, function(d) .chr(pop[[key_map[[d]]]][sel])),
+        stringsAsFactors = FALSE,
+        check.names = FALSE
+      )
+      names(j) <- dvars
+      j$pop <- cnt[sel]
+      j <- stats::aggregate(j["pop"], j[dvars], sum)
+      joint[[g]] <- j[j$pop > 0, c(dvars, "pop"), drop = FALSE]
+    }
   }
 
   sample_n <- NULL
@@ -75,13 +90,20 @@ wf_target_population <- function(pop, key_map, count, dims,
     sample_n <- stats::setNames(as.numeric(sample_n), names(sample_n))
   }
   groups <- .wf_scale_groups(groups, scale, sample_n, totals)
+  if (keep_joint) {
+    for (g in names(joint)) {
+      f <- groups[[g]]$total / sum(joint[[g]]$pop)
+      joint[[g]]$pop <- joint[[g]]$pop * f
+    }
+  }
 
   .wf_new_target(
     "population",
     by,
     dvars,
     groups,
-    meta = list(scale = scale, created = Sys.time())
+    meta = list(scale = scale, created = Sys.time()),
+    joint = joint
   )
 }
 

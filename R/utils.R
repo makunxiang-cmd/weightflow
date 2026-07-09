@@ -35,9 +35,9 @@
 #' @param meta Provenance metadata.
 #' @keywords internal
 #' @noRd
-.wf_new_target <- function(mode, by, dims, groups, meta = list()) {
+.wf_new_target <- function(mode, by, dims, groups, meta = list(), joint = NULL) {
   tgt <- structure(
-    list(mode = mode, by = by, dims = dims, groups = groups, meta = meta),
+    list(mode = mode, by = by, dims = dims, groups = groups, meta = meta, joint = joint),
     class = "wf_target"
   )
   .wf_validate_target(tgt)
