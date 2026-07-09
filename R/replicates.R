@@ -86,3 +86,38 @@
   }
   list(mult = mult, scale = 1 / R, rscales = rep(1, R))
 }
+
+#' Stratified delete-one-PSU jackknife multipliers.
+#'
+#' @param design A `.wf_design()` result.
+#' @keywords internal
+#' @noRd
+.wf_jack_mult <- function(design) {
+  n <- design$n
+  cols <- list()
+  rscales <- numeric(0)
+  for (h in design$strata) {
+    psus <- design$psu[[h]]
+    nh <- length(psus)
+    in_h <- design$stratum == h
+    if (nh < 2) {
+      wf_warn(
+        sprintf("Stratum '%s' has a single PSU; it cannot be jackknifed and contributes no replicate.", h),
+        "wf_warning_quality", list(stratum = h)
+      )
+      next
+    }
+    for (p in psus) {
+      m <- rep(1, n)
+      m[in_h] <- nh / (nh - 1)
+      m[in_h & design$cluster == p] <- 0
+      cols[[length(cols) + 1]] <- m
+      rscales <- c(rscales, (nh - 1) / nh)
+    }
+  }
+  if (length(cols) == 0) {
+    wf_abort("No stratum has >= 2 PSUs; jackknife has no replicates.",
+             "wf_error_design")
+  }
+  list(mult = do.call(cbind, cols), scale = 1, rscales = rscales)
+}

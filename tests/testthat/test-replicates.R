@@ -73,3 +73,34 @@ test_that(".wf_boot_mult is reproducible with a seed", {
   g2 <- .wf_boot_mult(des, R = 20, seed = 7)
   expect_identical(g1$mult, g2$mult)
 })
+
+test_that(".wf_jack_mult emits one replicate per PSU with the right rescale", {
+  d <- make_design_data()
+  des <- .wf_design(d, strata = "stratum", clusters = "psu")
+  gen <- .wf_jack_mult(des)
+
+  # 2 strata x 2 PSUs = 4 replicates
+  expect_equal(ncol(gen$mult), 4)
+  expect_equal(gen$scale, 1)
+  expect_equal(gen$rscales, rep((2 - 1) / 2, 4))
+})
+
+test_that(".wf_jack_mult deletes exactly one PSU and rescales its stratum", {
+  d <- make_design_data()
+  des <- .wf_design(d, strata = "stratum", clusters = "psu")
+  gen <- .wf_jack_mult(des)
+
+  # first replicate deletes PSU a1 (rows 1,2): 0 there, 2 for rows 3,4, 1 elsewhere
+  col1 <- gen$mult[, 1]
+  expect_equal(col1[1:2], c(0, 0))
+  expect_equal(col1[3:4], c(2, 2))       # n_h/(n_h-1) = 2
+  expect_equal(col1[5:8], rep(1, 4))     # other stratum untouched
+})
+
+test_that(".wf_jack_mult warns on a single-PSU stratum and skips it", {
+  d <- make_design_data()
+  d$stratum[8] <- "C"
+  d$psu[8] <- "c1"                       # stratum C has 1 PSU
+  des <- .wf_design(d, strata = "stratum", clusters = "psu")
+  expect_warning(.wf_jack_mult(des), class = "wf_warning_quality")
+})
