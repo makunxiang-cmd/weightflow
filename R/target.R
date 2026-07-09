@@ -299,3 +299,83 @@ wf_target_manual <- function(margins, dims,
     meta = list(scale = "manual", created = Sys.time())
   )
 }
+
+#' Shrink a target toward a reference target
+#'
+#' Blends each selected target group's margin shares with reference shares while
+#' preserving the local target group totals.
+#'
+#' @param target Local `wf_target` object.
+#' @param reference Reference `wf_target` object. A single reference group is
+#'   applied to all selected target groups.
+#' @param lambda Local-share weight in `[0, 1]`. Smaller values shrink more
+#'   strongly toward `reference`.
+#' @param groups Optional target groups to shrink.
+#'
+#' @return A `wf_target` object.
+#' @export
+#'
+#' @examples
+#' dims <- wf_dims(gender = c("female", "male"))
+#' local <- wf_target_manual(
+#'   data.frame(dimension = c("gender", "gender"),
+#'              category = c("female", "male"),
+#'              value = c(80, 20)),
+#'   dims
+#' )
+#' reference <- wf_target_manual(
+#'   data.frame(dimension = c("gender", "gender"),
+#'              category = c("female", "male"),
+#'              value = c(50, 50)),
+#'   dims
+#' )
+#' wf_target_shrink(local, reference, lambda = 0.25)
+wf_target_shrink <- function(target, reference, lambda, groups = NULL) {
+  if (!inherits(target, "wf_target") || !inherits(reference, "wf_target")) {
+    wf_abort("`target` and `reference` must be wf_target objects.", "wf_error_input")
+  }
+  if (length(lambda) != 1 || !is.finite(lambda) || lambda < 0 || lambda > 1) {
+    wf_abort("`lambda` must be a single number in [0, 1].", "wf_error_input")
+  }
+  if (!identical(target$dims, reference$dims)) {
+    wf_abort("`target` and `reference` must have identical dimensions.", "wf_error_schema")
+  }
+  groups <- if (is.null(groups)) names(target$groups) else .chr(groups)
+  ref_single <- length(reference$groups) == 1
+  ref_one <- reference$groups[[1]]
+  out <- target
+
+  for (g in groups) {
+    if (is.null(out$groups[[g]])) {
+      wf_abort(sprintf("Unknown target group '%s'.", g), "wf_error_input", list(group = g))
+    }
+    ref_group <- if (ref_single) ref_one else reference$groups[[g]]
+    if (is.null(ref_group)) {
+      wf_abort(sprintf("Reference target has no group '%s'.", g), "wf_error_schema", list(group = g))
+    }
+    for (d in out$dims) {
+      local_m <- out$groups[[g]]$margins[[d]]
+      ref_m <- ref_group$margins[[d]]
+      if (!identical(sort(names(local_m)), sort(names(ref_m)))) {
+        wf_abort(
+          sprintf("Group '%s', dim '%s': target and reference categories differ.", g, d),
+          "wf_error_schema",
+          list(group = g, dim = d)
+        )
+      }
+      ref_m <- ref_m[names(local_m)]
+      local_share <- local_m / sum(local_m)
+      ref_share <- ref_m / sum(ref_m)
+      new_share <- lambda * local_share + (1 - lambda) * ref_share
+      out$groups[[g]]$margins[[d]] <- .wf_margin_vector(out$groups[[g]]$total * new_share)
+    }
+  }
+  out$meta$shrinkage <- c(out$meta$shrinkage, list(list(
+    lambda = lambda,
+    groups = groups,
+    reference_mode = reference$mode,
+    created = Sys.time()
+  )))
+  .wf_validate_target(out)
+  out
+}

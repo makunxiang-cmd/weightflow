@@ -54,3 +54,60 @@ test_that("manual target rejects non-additive dimensions", {
     class = "wf_error_input"
   )
 })
+
+test_that("target shrinkage preserves local totals and blends shares", {
+  dims <- wf_dims(gender = c("female", "male"))
+  local <- wf_target_manual(
+    data.frame(
+      province = c("A", "A"),
+      dimension = "gender",
+      category = c("female", "male"),
+      value = c(80, 20),
+      stringsAsFactors = FALSE
+    ),
+    dims,
+    by = "province"
+  )
+  reference <- wf_target_manual(
+    data.frame(
+      dimension = c("gender", "gender"),
+      category = c("female", "male"),
+      value = c(50, 50),
+      stringsAsFactors = FALSE
+    ),
+    dims
+  )
+
+  shrunk <- wf_target_shrink(local, reference, lambda = 0.25)
+
+  expect_s3_class(shrunk, "wf_target")
+  expect_equal(shrunk$groups$A$total, 100)
+  expect_equal(unname(shrunk$groups$A$margins$gender["female"]), 57.5, tolerance = 1e-8)
+  expect_equal(unname(shrunk$groups$A$margins$gender["male"]), 42.5, tolerance = 1e-8)
+  expect_true(!is.null(shrunk$meta$shrinkage))
+})
+
+test_that("target shrinkage rejects invalid lambda and incompatible categories", {
+  dims <- wf_dims(gender = c("female", "male"))
+  local <- wf_target_manual(
+    data.frame(
+      dimension = c("gender", "gender"),
+      category = c("female", "male"),
+      value = c(80, 20),
+      stringsAsFactors = FALSE
+    ),
+    dims
+  )
+  bad_ref <- wf_target_manual(
+    data.frame(
+      dimension = c("gender", "gender"),
+      category = c("female", "other"),
+      value = c(50, 50),
+      stringsAsFactors = FALSE
+    ),
+    wf_dims(gender = c("female", "other"))
+  )
+
+  expect_error(wf_target_shrink(local, local, lambda = 1.5), class = "wf_error_input")
+  expect_error(wf_target_shrink(local, bad_ref, lambda = 0.5), class = "wf_error_schema")
+})
