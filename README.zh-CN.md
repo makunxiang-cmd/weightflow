@@ -148,10 +148,16 @@ wf_diagnose(weights_manual)
 | 合并 | `wf_collapse_ladder()` | 声明事后分层的合并阶梯。 |
 | 合并 | `wf_suggest_collapse()` | 依据预检查结果给出合并建议。 |
 | 合并 | `wf_apply_collapse()` | 将合并方案应用到样本与目标。 |
-| 校准 | `wf_calibrate()` | 调度到具体校准方法（raking 或事后分层）。 |
+| 校准 | `wf_calibrate()` | 调度到具体校准方法（raking、事后分层、greg、logit）。 |
 | 校准 | `wf_rake()` | 分组 raking（迭代比例拟合）。 |
 | 校准 | `wf_plan_poststrat()` | 规划事后分层的单元格解析。 |
 | 校准 | `wf_poststrat()` | 执行单元格级事后分层。 |
+| 组合 | `wf_compose()` | 将多个加权阶段相乘为一个可审计结果。 |
+| 融合 | `wf_blend()` | 在估计量层面融合线上与线下两个来源。 |
+| 倾向 | `wf_target_propensity()` | 将线上样本与概率参考样本堆叠为成员模型规格。 |
+| 倾向 | `wf_propensity()` | 产出逆倾向伪设计权重，附重叠与平衡诊断。 |
+| 方差 | `wf_replicates()` | 生成重新校准的 bootstrap/jackknife/BRR 重复权重。 |
+| 方差 | `wf_variance()` | 将重复权重与估计量组合为估计值、标准误与置信区间。 |
 | 诊断 | `wf_diagnose()` | 诊断校准后的权重与边际。 |
 
 所有导出函数均带有完整文档。在 R 中可用 `?wf_rake`、`help(package = "WFC")`
@@ -164,9 +170,15 @@ wf_diagnose(weights_manual)
 
 ## 项目状态
 
-本仓库处于基础 API 建设阶段。0.3.0 的范围在保留现有 raking 与事后分层引擎的同时，新增了
-手工目标、目标收缩、合并建议、合并方案应用以及统一的校准调度。完整变更见
+0.x 阶段的原始设计范围已全部实现：raking、事后分层、手工目标与目标收缩、合并规划、
+权重组合、双源融合、倾向得分校正、重复权重方差以及有界（GREG/logit）校准。
+因 CRAN 上存在同名包，本包已于 0.9.0 从 `weightflow` 更名为 `WFC`。完整变更见
 [`NEWS.md`](NEWS.md)。
+
+设计文档位于 [`inst/design/`](inst/design/)（英文），其中
+[`wfc_future_design.md`](inst/design/wfc_future_design.md) 为 0.10 → 1.0 的未来路线
+（引导式工作流、生态桥接、生产基础设施、软校准等），对应的参考原型实现位于
+[`inst/reference/`](inst/reference/)。
 
 ## 参与贡献
 

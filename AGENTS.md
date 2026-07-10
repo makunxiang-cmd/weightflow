@@ -2,13 +2,21 @@
 
 ## Project Authority
 
-Follow `inst/design/weightflow_design.md` as the design authority and
-`inst/reference/weightflow_core.R` as the 0.1.0 implementation reference.
+Follow the design documents under `inst/design/` as the design authority:
+`weightflow_design.md` (core), `weightflow_poststrat_design.md` (Extension 1),
+`weightflow_roadmap_design.md` (Extension 2), and `wfc_future_design.md`
+(Extension 3, the 0.10 -> 1.0 roadmap). Reference prototypes live under
+`inst/reference/`: `weightflow_core.R` / `weightflow_poststrat.R` for the
+shipped engines and the `wfc_future_*.R` files for roadmap features. The
+package was renamed from `weightflow` to `WFC` at 0.9.0; historical file names
+keep the old name on purpose.
 
 ## Language Policy
 
 Use English for package code, tests, documentation, configuration, and commit
 messages. The only Chinese-language repository file is `README.zh-CN.md`.
+Working documents in Chinese live in the local `ZH/` folder, which is
+git-ignored and build-ignored; do not commit its contents.
 
 ## Data Policy
 

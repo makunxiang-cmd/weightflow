@@ -16,4 +16,4 @@ tmp/
 ..Rcheck/
 build/
 .worktrees/
-audit-report-zh-*.md
+ZH/
