@@ -43,3 +43,14 @@ Sweeps candidate upper caps by rerunning raking and reports the trade-off
 between design effect and residual margin error. The function recommends a
 cap but never applies it to a production result.
 }
+\examples{
+data(wfc_example)
+target <- wf_target_population(
+  wfc_example$population,
+  c(gender = "gender", age = "age"),
+  "count",
+  wfc_example$dims,
+  by = "province"
+)
+wf_auto_trim(wfc_example$sample, target, id = "id", caps = c(2, 4))
+}

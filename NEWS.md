@@ -1,3 +1,26 @@
+# WFC 0.10.0
+
+Usability foundations. This release adds review and communication layers over
+the existing weighting engines without changing their numerical semantics.
+
+* Added `wf_report()` with manager and analyst projections, structured
+  method-specific sections, Markdown output, dependency-free escaped HTML,
+  `print()`, and `as.data.frame()` support. Reports accept both `wf_weights` and
+  `wf_blend_result` objects.
+* Added `wf_auto_trim()` to sweep candidate caps, expose the bias-variance
+  frontier, preserve candidate warnings/failures, and recommend the loosest cap
+  satisfying declared design-effect and margin-residual criteria.
+* Added `wf_suggest_ladder()` to draft adjacent category merges from worst-group
+  support, order dimensions by affected sample share, and return a validated
+  ladder for explicit human review.
+* Added base-graphics methods for weights, diagnostics, automatic trim results,
+  blend sensitivity, and propensity overlap/balance.
+* Propensity results now inherit from the additive `wf_propensity_weights`
+  subclass and retain fitted propensity vectors for overlap plotting while
+  remaining fully compatible with `wf_weights` consumers.
+* The `lang` argument on `wf_report()` reserves the 0.11 localization contract;
+  0.10 reports are English-only and reject unsupported languages explicitly.
+
 # WFC 0.9.1
 
 Stabilization release. No public API signatures or weighting-method semantics

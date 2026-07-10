@@ -13,6 +13,16 @@
 #' @return A `wf_ladder_draft` containing reviewable levels and a validated
 #'   `wf_collapse_ladder` in `$ladder`.
 #' @export
+#' @examples
+#' data(wfc_example)
+#' target <- wf_target_population(
+#'   wfc_example$population,
+#'   c(gender = "gender", age = "age"),
+#'   "count",
+#'   wfc_example$dims,
+#'   by = "province"
+#' )
+#' wf_suggest_ladder(wfc_example$sample, target, wfc_example$dims, min_cell = 25)
 wf_suggest_ladder <- function(sample, target, dims, min_cell = 5) {
   if (!is.data.frame(sample) || nrow(sample) == 0) {
     wf_abort("`sample` must be a non-empty data frame.", "wf_error_input")

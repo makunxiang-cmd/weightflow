@@ -1,6 +1,6 @@
 Package: WFC
 Title: Workflow-Oriented Survey Weight Calibration
-Version: 0.9.1
+Version: 0.10.0
 Authors@R: person(given = "Kunxiang", family = "Ma", email = "mkx07080412@gmail.com", role = c("aut", "cre"))
 Author: Kunxiang Ma [aut, cre]
 Maintainer: Kunxiang Ma <mkx07080412@gmail.com>

@@ -18,6 +18,16 @@
 #'   recommended cap. `Inf` means no trimming is needed; `NA` means no candidate
 #'   meets both criteria.
 #' @export
+#' @examples
+#' data(wfc_example)
+#' target <- wf_target_population(
+#'   wfc_example$population,
+#'   c(gender = "gender", age = "age"),
+#'   "count",
+#'   wfc_example$dims,
+#'   by = "province"
+#' )
+#' wf_auto_trim(wfc_example$sample, target, id = "id", caps = c(2, 4))
 wf_auto_trim <- function(sample, target, id = NULL,
                          caps = c(2, 3, 4, 5, 6, 8, 10, 12),
                          lo = 0.05, max_deff = 6,

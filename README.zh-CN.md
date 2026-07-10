@@ -40,7 +40,7 @@ remotes::install_github("makunxiang-cmd/WFC")
 或从源码压缩包安装：
 
 ```r
-install.packages("WFC_0.9.1.tar.gz", repos = NULL, type = "source")
+install.packages("WFC_0.10.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ## 工作流概览
@@ -135,6 +135,35 @@ weights_manual <- wf_calibrate(
 wf_diagnose(weights_manual)
 ```
 
+## 易用性基础（0.10）
+
+0.10 在现有统计引擎之上增加审核与沟通工具。`wf_auto_trim()` 只推荐、不会自动应用
+截尾上限；`wf_suggest_ladder()` 生成供人工复核的合并阶梯草案；`wf_report()` 可生成
+面向管理者或分析人员的结构化质量报告。
+
+```r
+trim_advice <- wf_auto_trim(
+  wfc_example$sample,
+  target,
+  id = "id",
+  caps = c(2, 4, 8)
+)
+plot(trim_advice)
+
+report <- wf_report(weights, target, audience = "manager")
+report
+
+ladder_draft <- wf_suggest_ladder(
+  wfc_example$sample,
+  target,
+  dims,
+  min_cell = 25
+)
+ladder_draft
+```
+
+`wf_weights`、`wf_diagnostics`、融合结果和倾向权重结果也都提供了 base R `plot()` 方法。
+
 ## 函数速查
 
 | 阶段 | 函数 | 用途 |
@@ -147,6 +176,7 @@ wf_diagnose(weights_manual)
 | 预检查 | `wf_precheck()` | 校准前检查样本与目标的兼容性。 |
 | 合并 | `wf_collapse_ladder()` | 声明事后分层的合并阶梯。 |
 | 合并 | `wf_suggest_collapse()` | 依据预检查结果给出合并建议。 |
+| 合并 | `wf_suggest_ladder()` | 根据稀疏支持度生成可复核的事后分层阶梯草案。 |
 | 合并 | `wf_apply_collapse()` | 将合并方案应用到样本与目标。 |
 | 校准 | `wf_calibrate()` | 调度到具体校准方法（raking、事后分层、greg、logit）。 |
 | 校准 | `wf_rake()` | 分组 raking（迭代比例拟合）。 |
@@ -158,7 +188,10 @@ wf_diagnose(weights_manual)
 | 倾向 | `wf_propensity()` | 产出逆倾向伪设计权重，附重叠与平衡诊断。 |
 | 方差 | `wf_replicates()` | 生成重新校准的 bootstrap/jackknife/BRR 重复权重。 |
 | 方差 | `wf_variance()` | 将重复权重与估计量组合为估计值、标准误与置信区间。 |
+| 建议 | `wf_auto_trim()` | 根据偏差—方差前沿推荐截尾上限。 |
 | 诊断 | `wf_diagnose()` | 诊断校准后的权重与边际。 |
+| 报告 | `wf_report()` | 生成管理者/分析者质量报告对象、Markdown 或 HTML。 |
+| 可视化 | `plot()` | 绘制权重、诊断、截尾前沿、融合敏感性或倾向质量。 |
 
 所有导出函数均带有完整文档。在 R 中可用 `?wf_rake`、`help(package = "WFC")`
 或 `example(wf_target_population)` 查看。
@@ -170,7 +203,7 @@ wf_diagnose(weights_manual)
 
 ## 项目状态
 
-0.x 阶段的原始设计范围已全部实现：raking、事后分层、手工目标与目标收缩、合并规划、
+0.10.0 已在完整的原始设计范围上加入易用性基础：raking、事后分层、手工目标与目标收缩、合并规划、
 权重组合、双源融合、倾向得分校正、重复权重方差以及有界（GREG/logit）校准。
 因 CRAN 上存在同名包，本包已于 0.9.0 从 `weightflow` 更名为 `WFC`。完整变更见
 [`NEWS.md`](NEWS.md)。

@@ -19,6 +19,8 @@ no downstream dependencies because this is a first submission.
 
 * The test suite includes an optional numerical oracle against `survey::rake()`.
 * CI enforces at least 80% line coverage.
+* Usability plot methods are exercised on non-interactive PDF devices, and the
+  report suite verifies Markdown, escaped standalone HTML, and file output.
 * Package examples and vignettes use only the bundled simulated `wfc_example`
   data. Files under `private-data/` are excluded from builds and are never read
   by examples or tests.

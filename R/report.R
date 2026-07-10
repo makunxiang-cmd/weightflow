@@ -304,6 +304,17 @@
 #' @return A `wf_quality_report` for `output = "object"`; otherwise a rendered
 #'   character string, or invisibly the structured report when `file` is used.
 #' @export
+#' @examples
+#' data(wfc_example)
+#' target <- wf_target_population(
+#'   wfc_example$population,
+#'   c(gender = "gender", age = "age"),
+#'   "count",
+#'   wfc_example$dims,
+#'   by = "province"
+#' )
+#' weights <- wf_rake(wfc_example$sample, target, id = "id")
+#' wf_report(weights, target, audience = "manager")
 wf_report <- function(w, target = NULL,
                       audience = c("manager", "analyst"),
                       lang = NULL,

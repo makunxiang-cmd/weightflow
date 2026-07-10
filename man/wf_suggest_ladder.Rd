@@ -25,3 +25,14 @@ Examines worst-group category support and proposes adjacent category merges
 in the explicit level order declared by \code{\link[=wf_dims]{wf_dims()}}. The result is a draft
 for review; no input is modified and no merge is applied automatically.
 }
+\examples{
+data(wfc_example)
+target <- wf_target_population(
+  wfc_example$population,
+  c(gender = "gender", age = "age"),
+  "count",
+  wfc_example$dims,
+  by = "province"
+)
+wf_suggest_ladder(wfc_example$sample, target, wfc_example$dims, min_cell = 25)
+}
