@@ -1,4 +1,4 @@
-# weightflow 中文简介
+# WFC 中文简介
 
 <!-- badges: start -->
 [![Project Status: WIP](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
@@ -9,17 +9,17 @@
 
 [English](README.md) | **简体中文**
 
-`weightflow` 是一个面向工作流的 R 包，用于调查数据的加权与迭代比例拟合（raking）。
+`WFC` 是一个面向工作流的 R 包，用于调查数据的加权与迭代比例拟合（raking）。
 它强调一条严谨的 **预检查 → 执行 → 诊断** 流水线，用于多来源调查校准；采用与数据结构
 无关（schema-agnostic）的维度定义和规范化的目标对象，使 raking 与事后分层（post-stratification）
 两个引擎共享一致的接口契约。
 
 > 说明：本项目的代码、测试、英文文档与配置一律使用英文；本文件是仓库中唯一的中文说明文件。
 
-## 为什么用 weightflow
+## 为什么用 WFC
 
 多数加权脚本会“悄无声息”地出错：某个类别在目标中缺失、某个单元格样本太少无法估计，
-或修剪（trimming）后组内总量发生漂移。`weightflow` 把这些失败模式变成一等公民、可复核的步骤。
+或修剪（trimming）后组内总量发生漂移。`WFC` 把这些失败模式变成一等公民、可复核的步骤。
 
 - **先预检查，再校准。** `wf_precheck()` 在计算任何权重之前，比对样本与目标并报告不兼容之处。
 - **一套目标契约，多种数据来源。** 可从外部总体数据、加权参考样本或手工边际表构建规范化的 `wf_target`。
@@ -34,13 +34,13 @@
 
 ```r
 # install.packages("remotes")
-remotes::install_github("makunxiang-cmd/weightflow")
+remotes::install_github("makunxiang-cmd/WFC")
 ```
 
 或从源码压缩包安装：
 
 ```r
-install.packages("weightflow_0.3.0.tar.gz", repos = NULL, type = "source")
+install.packages("WFC_0.9.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ## 工作流概览
@@ -56,23 +56,23 @@ install.packages("weightflow_0.3.0.tar.gz", repos = NULL, type = "source")
 ## 快速上手
 
 ```r
-library(weightflow)
+library(WFC)
 
-data(weightflow_example)
+data(wfc_example)
 
-dims <- weightflow_example$dims
+dims <- wfc_example$dims
 target <- wf_target_population(
-  pop = weightflow_example$population,
+  pop = wfc_example$population,
   key_map = c(gender = "gender", age = "age"),
   count = "count",
   dims = dims,
   by = "province"
 )
 
-precheck <- wf_precheck(weightflow_example$sample, target, id = "id")
+precheck <- wf_precheck(wfc_example$sample, target, id = "id")
 precheck
 
-weights <- wf_rake(weightflow_example$sample, target, id = "id")
+weights <- wf_rake(wfc_example$sample, target, id = "id")
 wf_diagnose(weights, target = target)
 ```
 
@@ -83,7 +83,7 @@ wf_diagnose(weights, target = target)
 
 ```r
 target_joint <- wf_target_population(
-  pop = weightflow_example$population,
+  pop = wfc_example$population,
   key_map = c(gender = "gender", age = "age"),
   count = "count",
   dims = dims,
@@ -97,7 +97,7 @@ ladder <- wf_collapse_ladder(
 )
 
 plan <- wf_plan_poststrat(
-  weightflow_example$sample,
+  wfc_example$sample,
   target_joint,
   min_cell = 2,
   ladder = ladder
@@ -105,7 +105,7 @@ plan <- wf_plan_poststrat(
 plan
 
 post <- wf_poststrat(
-  weightflow_example$sample,
+  wfc_example$sample,
   target_joint,
   min_cell = 2,
   ladder = ladder,
@@ -127,7 +127,7 @@ manual <- data.frame(
 
 target_manual <- wf_target_manual(manual, dims)
 weights_manual <- wf_calibrate(
-  weightflow_example$sample,
+  wfc_example$sample,
   target_manual,
   method = "raking",
   id = "id"
@@ -154,13 +154,13 @@ wf_diagnose(weights_manual)
 | 校准 | `wf_poststrat()` | 执行单元格级事后分层。 |
 | 诊断 | `wf_diagnose()` | 诊断校准后的权重与边际。 |
 
-所有导出函数均带有完整文档。在 R 中可用 `?wf_rake`、`help(package = "weightflow")`
+所有导出函数均带有完整文档。在 R 中可用 `?wf_rake`、`help(package = "WFC")`
 或 `example(wf_target_population)` 查看。
 
 ## 数据政策
 
 `private-data/` 下的私有源电子表格和 RData 文件**不会提交**到仓库，也**不会**随 R 包发布。
-所有示例与测试仅使用由 `data-raw/make-weightflow-example.R` 生成的模拟数据集 `weightflow_example`。
+所有示例与测试仅使用由 `data-raw/make-wfc-example.R` 生成的模拟数据集 `wfc_example`。
 
 ## 项目状态
 
@@ -176,4 +176,4 @@ wf_diagnose(weights_manual)
 
 ## 许可证
 
-基于 [MIT 许可证](LICENSE.md) 发布。© 2026 makunxiang-cmd 与 weightflow 贡献者。
+基于 [MIT 许可证](LICENSE.md) 发布。© 2026 makunxiang-cmd 与 WFC 贡献者。

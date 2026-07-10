@@ -30,6 +30,27 @@ test_that("wf_rake returns positive weights matching target margins", {
   }
 })
 
+test_that("wf_rake raises a classed convergence error when IPF cannot finish", {
+  fixture <- make_weightflow_fixture()
+
+  err <- expect_error(
+    wf_rake(fixture$sample, fixture$target, id = "id", max_iter = 0),
+    class = "wf_error_convergence"
+  )
+  expect_true(!is.null(err$data$group))
+  expect_true(!is.null(err$data$worst_dim))
+})
+
+test_that("wf_rake records the installed package version in provenance", {
+  fixture <- make_weightflow_fixture()
+  weights <- wf_rake(fixture$sample, fixture$target, id = "id")
+
+  expect_identical(
+    weights$provenance$package_version,
+    as.character(utils::packageVersion("WFC"))
+  )
+})
+
 test_that("wf_diagnose reports diagnostics and margin error", {
   fixture <- make_weightflow_fixture()
   weights <- wf_rake(fixture$sample, fixture$target, id = "id", tol = 1e-8)

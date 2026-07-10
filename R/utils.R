@@ -164,6 +164,19 @@
   out
 }
 
+#' Return the loaded package version for provenance records.
+#'
+#' @return The installed package version as a character scalar, or the
+#'   development fallback when the package is not installed.
+#' @keywords internal
+#' @noRd
+.wf_package_version <- function() {
+  tryCatch(
+    as.character(utils::packageVersion("WFC")),
+    error = function(e) "dev"
+  )
+}
+
 #' Convert grouped sums to a named numeric vector.
 #'
 #' @param x One-dimensional grouped-sum result.

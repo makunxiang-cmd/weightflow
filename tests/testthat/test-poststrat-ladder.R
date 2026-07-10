@@ -17,8 +17,8 @@ test_that("collapse ladder validates dimensions and cumulative source categories
     byrow = TRUE,
     dimnames = list(NULL, c("age", "edu"))
   )
-  expect_equal(weightflow:::.wf_apply_ladder(mat, ladder, 1)[, "age"], c("45", "45", "2"))
-  expect_equal(weightflow:::.wf_apply_ladder(mat, ladder, 2)[, "age"], c("45", "45", "123"))
+  expect_equal(WFC:::.wf_apply_ladder(mat, ladder, 1)[, "age"], c("45", "45", "2"))
+  expect_equal(WFC:::.wf_apply_ladder(mat, ladder, 2)[, "age"], c("45", "45", "123"))
 })
 
 test_that("collapse ladder rejects unknown dimensions and typo categories", {
@@ -38,8 +38,8 @@ test_that("cell keys split back into dimension columns", {
   mat <- matrix(c("female", "young", "male", "old"), ncol = 2, byrow = TRUE)
   colnames(mat) <- c("gender", "age")
 
-  key <- weightflow:::.wf_cell_key(mat, c("gender", "age"))
-  out <- weightflow:::.wf_split_key(key, c("gender", "age"))
+  key <- WFC:::.wf_cell_key(mat, c("gender", "age"))
+  out <- WFC:::.wf_split_key(key, c("gender", "age"))
 
   expect_equal(out$gender, c("female", "male"))
   expect_equal(out$age, c("young", "old"))

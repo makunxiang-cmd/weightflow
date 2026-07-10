@@ -222,6 +222,25 @@ wf_rake <- function(sample, target, id = NULL,
       w <- w * (pw / .grp_sum(w, ex$pid, ex$n_persons))[ex$pid]
     }
 
+    if (!fit$converged) {
+      worst <- which.max(vapply(seq_along(dvars), function(d) {
+        cur <- .grp_sum(fit$w, idx[[d]], length(tgl[[d]]))
+        max(abs(ifelse(cur > 0, tgl[[d]] / cur, 1) - 1))
+      }, numeric(1)))
+      wf_abort(sprintf(
+        "Group '%s': IPF did not converge within %d iteration(s) (last deviation %.3g; worst dimension '%s'). Re-run wf_precheck() and collapse thin categories, or raise max_iter.",
+        g,
+        max_iter,
+        fit$final_dev,
+        dvars[[worst]]
+      ), "wf_error_convergence", list(
+        group = g,
+        final_dev = fit$final_dev,
+        worst_dim = dvars[[worst]],
+        max_iter = max_iter
+      ))
+    }
+
     pw <- .grp_sum(w, ex$pid, ex$n_persons)
     achieved[[g]] <- lapply(seq_along(dvars), function(d) {
       stats::setNames(.grp_sum(w, idx[[d]], length(tgl[[d]])), names(gr$margins[[d]]))
@@ -263,7 +282,7 @@ wf_rake <- function(sample, target, id = NULL,
       collapsed = target$meta$collapsed,
       created = t0,
       elapsed = as.numeric(Sys.time() - t0, units = "secs"),
-      package_version = "0.1.0"
+      package_version = .wf_package_version()
     )
   ), class = "wf_weights")
 }

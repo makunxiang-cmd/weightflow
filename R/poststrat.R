@@ -31,7 +31,18 @@ wf_poststrat <- function(sample, target, min_cell, ladder,
   dvars <- target$dims
   gkey <- .wf_group_keys(sample, target$by)
   ids <- if (is.null(id)) seq_len(nrow(sample)) else sample[[id]]
-  iw <- if (is.null(init_weight)) rep(1, nrow(sample)) else sample[[init_weight]]
+  if (is.null(init_weight)) {
+    iw <- rep(1, nrow(sample))
+  } else {
+    if (length(init_weight) != 1 || !is.character(init_weight) ||
+        !init_weight %in% names(sample)) {
+      wf_abort(sprintf(
+        "init_weight column '%s' not found in sample.",
+        as.character(init_weight)[1]
+      ), "wf_error_schema", list(init_weight = init_weight))
+    }
+    iw <- as.numeric(sample[[init_weight]])
+  }
   if (any(!is.finite(iw)) || any(iw <= 0)) {
     wf_abort("Initial weights must be finite and > 0.", "wf_error_input")
   }
@@ -112,29 +123,29 @@ wf_poststrat <- function(sample, target, min_cell, ladder,
     if (any(in_pop)) {
       wr <- which(in_pop)
       lv_i <- as.integer(lvl_of_raw[s_raw[in_pop]])
-      s_res[in_pop] <- vapply(seq_along(wr), function(j) {
-        .wf_cell_key(
-          .wf_apply_ladder(smat[wr[j], , drop = FALSE], ladder, lv_i[j]),
+      for (lv in unique(lv_i)) {
+        rows_lv <- wr[lv_i == lv]
+        s_res[rows_lv] <- .wf_cell_key(
+          .wf_apply_ladder(smat[rows_lv, , drop = FALSE], ladder, lv),
           dvars
         )
-      }, character(1))
+      }
     }
 
     if (any(!in_pop)) {
       valid_res <- unique(res$resolved)
-      for (idxrow in which(!in_pop)) {
-        assigned <- NA_character_
-        for (lv in 0:(length(res$s_keys) - 1)) {
-          k <- .wf_cell_key(
-            .wf_apply_ladder(smat[idxrow, , drop = FALSE], ladder, lv),
-            dvars
-          )
-          if (k %in% valid_res) {
-            assigned <- k
-            break
-          }
+      todo <- which(!in_pop)
+      for (lv in 0:(length(res$s_keys) - 1)) {
+        if (length(todo) == 0) {
+          break
         }
-        s_res[idxrow] <- assigned
+        k <- .wf_cell_key(
+          .wf_apply_ladder(smat[todo, , drop = FALSE], ladder, lv),
+          dvars
+        )
+        hit <- k %in% valid_res
+        s_res[todo[hit]] <- k[hit]
+        todo <- todo[!hit]
       }
       n_drop <- sum(is.na(s_res))
       if (n_drop > 0) {
@@ -273,7 +284,7 @@ wf_poststrat <- function(sample, target, min_cell, ladder,
         ladder_levels = ladder$n_levels,
         created = t0,
         elapsed = as.numeric(Sys.time() - t0, units = "secs"),
-        package_version = "0.2.0"
+        package_version = .wf_package_version()
       )
     ),
     class = "wf_weights"

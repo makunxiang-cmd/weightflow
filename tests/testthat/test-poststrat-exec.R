@@ -17,6 +17,22 @@ test_that("wf_poststrat matches joint cell population totals", {
   expect_equal(max(weights$log$total_dev), 0, tolerance = 1e-8)
 })
 
+test_that("wf_poststrat rejects a missing init_weight column with a classed error", {
+  fixture <- make_poststrat_fixture()
+
+  expect_error(
+    wf_poststrat(
+      fixture$sample,
+      fixture$target,
+      min_cell = 1,
+      ladder = fixture$ladder,
+      init_weight = "no_such_column",
+      id = "id"
+    ),
+    class = "wf_error_schema"
+  )
+})
+
 test_that("wf_poststrat preserves initial weight ratios within resolved cells", {
   fixture <- make_poststrat_fixture()
   fixture$sample$base_w <- seq_len(nrow(fixture$sample))

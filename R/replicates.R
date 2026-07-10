@@ -4,7 +4,7 @@
 #' @noRd
 .wf_replicates_package_version <- function() {
   tryCatch(
-    as.character(utils::packageVersion("weightflow")),
+    as.character(utils::packageVersion("WFC")),
     error = function(e) "0.7.0"
   )
 }

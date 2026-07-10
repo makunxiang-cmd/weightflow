@@ -46,7 +46,7 @@ test_that("target invariant rejects non-additive margins", {
   target$groups$A$margins$gender["female"] <- target$groups$A$margins$gender["female"] + 1
 
   expect_error(
-    weightflow:::.wf_validate_target(target),
+    WFC:::.wf_validate_target(target),
     class = "wf_error_input"
   )
 })

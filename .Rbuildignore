@@ -8,9 +8,14 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.DS_Store$
+\.DS_Store$
+^\.worktrees$
+^weightflow_.*\.tar\.gz$
+^WFC_.*\.tar\.gz$
 ^README\.zh-CN\.md$
 ^AGENTS\.md$
 ^.*Rcheck$
 ^build$
 ^\.github$
 ^LICENSE\.md$
+^audit-report-zh-.*\.md$

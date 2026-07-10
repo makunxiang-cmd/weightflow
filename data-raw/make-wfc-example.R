@@ -21,10 +21,10 @@ dims <- wf_dims(
   age = c("young", "old")
 )
 
-weightflow_example <- list(
+wfc_example <- list(
   sample = sample,
   population = population,
   dims = dims
 )
 
-save(weightflow_example, file = "data/weightflow_example.rda", compress = "xz")
+save(wfc_example, file = "data/wfc_example.rda", compress = "xz")
