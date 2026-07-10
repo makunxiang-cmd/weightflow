@@ -1,18 +1,21 @@
-Package: weightflow
+Package: WFC
 Title: Workflow-Oriented Survey Weight Calibration
-Version: 0.8.0
-Authors@R: person(given = "Weightflow", family = "Contributors", email = "weightflow-maintainers@example.com", role = c("aut", "cre"))
-Author: Weightflow Contributors
-Maintainer: Weightflow Contributors <weightflow-maintainers@example.com>
+Version: 0.9.0
+Authors@R: person(given = "Kunxiang", family = "Ma", email = "mkx07080412@gmail.com", role = c("aut", "cre"))
+Author: Kunxiang Ma [aut, cre]
+Maintainer: Kunxiang Ma <mkx07080412@gmail.com>
 Description: Provides a disciplined precheck, execution, and diagnostics workflow
     for survey weighting and raking with schema-agnostic dimensions and canonical
     target objects.
 License: MIT + file LICENSE
-URL: https://github.com/makunxiang-cmd/weightflow
-BugReports: https://github.com/makunxiang-cmd/weightflow/issues
+URL: https://github.com/makunxiang-cmd/WFC
+BugReports: https://github.com/makunxiang-cmd/WFC/issues
 Encoding: UTF-8
 Depends:
     R (>= 3.5.0)
+Imports:
+    stats,
+    utils
 Roxygen: list(markdown = TRUE)
 LazyData: true
 Suggests:

@@ -1,4 +1,4 @@
 library(testthat)
-library(weightflow)
+library(WFC)
 
-test_check("weightflow")
+test_check("WFC")

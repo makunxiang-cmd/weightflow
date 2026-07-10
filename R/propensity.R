@@ -4,7 +4,7 @@
 #' @noRd
 .wf_propensity_package_version <- function() {
   tryCatch(
-    as.character(utils::packageVersion("weightflow")),
+    as.character(utils::packageVersion("WFC")),
     error = function(e) "0.6.0"
   )
 }
@@ -246,6 +246,19 @@ wf_propensity <- function(target,
   membership <- target$membership
   by <- target$by
   fml <- stats::reformulate(target$predictors, response = membership)
+
+  na_rows <- Reduce(
+    `|`,
+    lapply(target$predictors, function(p) is.na(stacked[[p]]))
+  )
+  if (any(na_rows)) {
+    wf_abort(sprintf(
+      "%d of %d stacked row(s) (%.1f%%) have NA in membership-model predictor(s). Clean or impute these values before fitting the propensity model.",
+      sum(na_rows),
+      nrow(stacked),
+      100 * sum(na_rows) / nrow(stacked)
+    ), "wf_error_input", list(n = sum(na_rows)))
+  }
 
   grp <- if (is.null(by)) rep(".all", nrow(stacked)) else .chr(stacked[[by]])
   is_online <- stacked$.wf_source == "online"

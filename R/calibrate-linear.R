@@ -4,7 +4,7 @@
 #' @noRd
 .wf_lincal_package_version <- function() {
   tryCatch(
-    as.character(utils::packageVersion("weightflow")),
+    as.character(utils::packageVersion("WFC")),
     error = function(e) "0.8.0"
   )
 }

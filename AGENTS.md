@@ -14,7 +14,7 @@ messages. The only Chinese-language repository file is `README.zh-CN.md`.
 
 Files under `private-data/` are local private source data. Do not commit them,
 read them into examples, or include them in package builds. Package examples use
-only simulated data generated from `data-raw/make-weightflow-example.R`.
+only simulated data generated from `data-raw/make-wfc-example.R`.
 
 ## Development Policy
 

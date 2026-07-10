@@ -1,4 +1,4 @@
-#' Abort with a classed weightflow condition.
+#' Abort with a classed WFC condition.
 #'
 #' @param message Error message.
 #' @param class Primary condition class.
@@ -12,7 +12,7 @@ wf_abort <- function(message, class, data = list()) {
   ))
 }
 
-#' Warn with a classed weightflow condition.
+#' Warn with a classed WFC condition.
 #'
 #' @param message Warning message.
 #' @param class Primary condition class.

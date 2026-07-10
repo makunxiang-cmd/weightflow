@@ -12,6 +12,14 @@ make_prop_target <- function() {
   wf_target_propensity(online, reference, member ~ x)
 }
 
+test_that("wf_propensity rejects NA in membership-model predictors", {
+  online <- data.frame(x = c(1.0, 1.4, NA, 2.2), stringsAsFactors = FALSE)
+  reference <- data.frame(x = c(-2.0, -1.6, -1.2, -0.8), stringsAsFactors = FALSE)
+  tgt <- wf_target_propensity(online, reference, member ~ x)
+
+  expect_error(wf_propensity(tgt), class = "wf_error_input")
+})
+
 test_that("wf_propensity returns a wf_weights object with the id/group/weight/feature contract", {
   tgt <- make_prop_target()
   w <- suppressWarnings(wf_propensity(tgt))
