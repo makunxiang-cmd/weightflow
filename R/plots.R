@@ -31,7 +31,12 @@ plot.wf_weights <- function(x, max_groups = 9, ...) {
   groups <- groups[seq_len(min(length(groups), as.integer(max_groups)))]
   old <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(old), add = TRUE)
-  graphics::par(mfrow = grDevices::n2mfrow(length(groups)))
+  layout <- if (length(groups) <= 3) {
+    c(1, length(groups))
+  } else {
+    grDevices::n2mfrow(length(groups))
+  }
+  graphics::par(mfrow = layout)
   dots <- list(...)
 
   for (group in groups) {
