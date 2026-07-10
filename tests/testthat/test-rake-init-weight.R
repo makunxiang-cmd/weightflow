@@ -32,3 +32,42 @@ test_that("wf_rake errors when init_weight column is missing", {
     class = "wf_error_schema"
   )
 })
+
+test_that("wf_rake rejects invalid initial weights", {
+  fixture <- make_weightflow_fixture()
+  sample <- fixture$sample
+  sample$base_weight <- 1
+  sample$base_weight[1] <- -1
+
+  expect_error(
+    wf_rake(sample, fixture$target, id = "id", init_weight = "base_weight"),
+    class = "wf_error_input"
+  )
+
+  sample$base_weight[1] <- NA_real_
+  expect_error(
+    wf_rake(sample, fixture$target, id = "id", init_weight = "base_weight"),
+    class = "wf_error_input"
+  )
+})
+
+test_that("wf_rake applies explicit missing-value policies", {
+  fixture <- make_weightflow_fixture()
+  sample <- fixture$sample
+  sample$age[1] <- NA
+
+  expect_error(
+    wf_rake(sample, fixture$target, id = "id", na = "error"),
+    class = "wf_error_feasibility"
+  )
+
+  expect_warning(
+    dropped <- wf_rake(sample, fixture$target, id = "id", na = "drop"),
+    class = "wf_warning_data"
+  )
+  expect_equal(nrow(dropped$data), nrow(sample) - 1)
+
+  fractional <- wf_rake(sample, fixture$target, id = "id", na = "fractional")
+  expect_equal(nrow(fractional$data), nrow(sample))
+  expect_true(all(fractional$data$weight > 0))
+})

@@ -13,11 +13,11 @@ A clear and concise description of what the bug is.
 ## Reproducible example
 
 Please provide a minimal [reprex](https://reprex.tidyverse.org/) using only the
-simulated `weightflow_example` dataset (do not include private data).
+simulated `wfc_example` dataset (do not include private data).
 
 ```r
-library(weightflow)
-data(weightflow_example)
+library(WFC)
+data(wfc_example)
 # ...
 ```
 

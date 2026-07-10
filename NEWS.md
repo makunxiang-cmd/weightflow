@@ -1,3 +1,25 @@
+# WFC 0.9.1
+
+Stabilization release. No public API signatures or weighting-method semantics
+changed.
+
+* Added an external oracle test comparing grouped raking, including non-uniform
+  initial weights, against `survey::rake()`.
+* Added determinism and order-invariance contracts for sample rows and
+  calibration dimensions.
+* Added an 80% line-coverage CI gate and a reproducible performance benchmark
+  harness for the core raking workloads.
+* Added the three workflow vignettes promised by the core design: the complete
+  precheck-execute-diagnose loop, population-data mapping, and dirty-data /
+  infeasibility handling.
+* Regenerated `wfc_example` with support in every documented joint cell. The
+  former deterministic pattern passed marginal precheck but made the README
+  raking quick start structurally non-convergent.
+* Fixed `wf_precheck()` so an NA grouping key is reported as `na_group` without
+  leaking into group arithmetic and causing an unrelated missing-value error.
+* Added CRAN release notes and refreshed contributor, package-name, data-policy,
+  and verification instructions after the rename to WFC.
+
 # WFC 0.9.0
 
 Package renamed from `weightflow` to `WFC`: CRAN already hosts an unrelated

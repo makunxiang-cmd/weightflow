@@ -15,7 +15,10 @@
 ^README\.zh-CN\.md$
 ^AGENTS\.md$
 ^.*Rcheck$
-^build$
+^build/(dotdot-Rcheck|git-stale-junk|weightflow[.]Rcheck)(/|$)
+^build/.*[.]tar[.]gz$
 ^\.github$
 ^LICENSE\.md$
+^cran-comments\.md$
+^bench$
 ^ZH$

@@ -18,5 +18,7 @@ Closes #
 - [ ] Added or updated `testthat` tests for behavior changes
 - [ ] Ran `devtools::document()` after roxygen changes
 - [ ] `devtools::test()` passes
-- [ ] `devtools::check()` passes with no errors or warnings
+- [ ] Line coverage remains at or above 80%
+- [ ] `R CMD check --as-cran --no-manual` passes with no errors or warnings
+- [ ] New or changed vignettes render successfully
 - [ ] Updated `NEWS.md` for user-facing changes

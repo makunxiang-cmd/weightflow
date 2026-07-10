@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea or enhancement for weightflow
+about: Suggest an idea or enhancement for WFC
 title: "[Feature] "
 labels: enhancement
 assignees: ''
