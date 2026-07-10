@@ -1,8 +1,10 @@
 Package: WFC
 Title: Workflow-Oriented Survey Weight Calibration
 Version: 0.10.0
-Authors@R: person(given = "Kunxiang", family = "Ma", email = "mkx07080412@gmail.com", role = c("aut", "cre"))
-Author: Kunxiang Ma [aut, cre]
+Authors@R: c(
+    person(given = "Kunxiang", family = "Ma", email = "mkx07080412@gmail.com", role = c("aut", "cre")),
+    person("WEIAN DATA TECH (Beijing) Co., Ltd.", role = c("cph", "fnd")))
+Author: Kunxiang Ma [aut, cre], WEIAN DATA TECH (Beijing) Co., Ltd. [cph, fnd]
 Maintainer: Kunxiang Ma <mkx07080412@gmail.com>
 Description: Provides a disciplined precheck, execution, and diagnostics workflow
     for survey weighting and raking with schema-agnostic dimensions and canonical

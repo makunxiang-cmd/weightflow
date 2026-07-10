@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2026 makunxiang-cmd and weightflow contributors
+Copyright (c) 2026 WEIAN DATA TECH (Beijing) Co., Ltd. (惟安数据科技（北京）有限公司)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

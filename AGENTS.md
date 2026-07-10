@@ -1,5 +1,16 @@
 # AGENTS.md
 
+## Ownership Policy (Highest Priority)
+
+All copyright in this project belongs 100% to WEIAN DATA TECH (Beijing) Co.,
+Ltd. (惟安数据科技（北京）有限公司). All git commits must be authored and
+committed as `WEIAN DATA <contact@weiandata.com>` (enforced via local git
+config; never commit under a personal identity). Any new file, document, or
+release that carries an attribution or copyright notice must name WEIAN DATA
+TECH as the copyright holder. For CRAN compliance, `DESCRIPTION` keeps
+Kunxiang Ma as maintainer (`cre`) while the company holds `cph` and `fnd`
+roles. This policy overrides all other conventions in this repository.
+
 ## Project Authority
 
 Follow the design documents under `inst/design/` as the design authority:

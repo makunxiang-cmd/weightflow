@@ -221,4 +221,4 @@ ladder_draft
 
 ## 许可证
 
-基于 [MIT 许可证](LICENSE.md) 发布。© 2026 makunxiang-cmd 与 WFC 贡献者。
+基于 [MIT 许可证](LICENSE.md) 发布。© 2026 惟安数据科技（北京）有限公司（WEIAN DATA TECH）。本项目版权 100% 归惟安数据科技所有。

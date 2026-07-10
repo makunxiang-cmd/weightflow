@@ -349,5 +349,5 @@ request. Repository conventions for automated agents are documented in
 
 ## License
 
-Released under the [MIT License](LICENSE.md). © 2026 makunxiang-cmd and WFC
-contributors.
+Released under the [MIT License](LICENSE.md). © 2026 WEIAN DATA TECH (Beijing)
+Co., Ltd. All copyright in this project belongs to WEIAN DATA TECH.
