@@ -24,6 +24,7 @@ test_that("wf_propensity returns a wf_weights object with the id/group/weight/fe
   tgt <- make_prop_target()
   w <- suppressWarnings(wf_propensity(tgt))
 
+  expect_s3_class(w, "wf_propensity_weights")
   expect_s3_class(w, "wf_weights")
   expect_named(w$data, c("id", "group", "weight", "feature"))
   expect_equal(nrow(w$data), tgt$n_online)
@@ -118,6 +119,9 @@ test_that("wf_propensity attaches an overlap report", {
   w <- suppressWarnings(wf_propensity(tgt))
 
   expect_type(w$overlap, "list")
+  expect_type(w$overlap$online_values, "double")
+  expect_type(w$overlap$reference_values, "double")
+  expect_length(w$overlap$online_values, tgt$n_online)
   expect_true(all(c("threshold", "online", "reference", "n_boundary", "n_online")
                   %in% names(w$overlap)))
   expect_equal(w$overlap$n_online, tgt$n_online)

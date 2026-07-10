@@ -22,7 +22,8 @@ wf_propensity(
 \item{trim}{Optional positive scalar: clamp weights above \code{trim * median(w)}.}
 }
 \value{
-A \code{wf_weights} object with \verb{$overlap} and \verb{$balance} diagnostics.
+A \code{wf_propensity_weights} object inheriting from \code{wf_weights}, with
+\verb{$overlap} and \verb{$balance} diagnostics.
 }
 \description{
 Fits the membership model declared in a \code{\link[=wf_target_propensity]{wf_target_propensity()}} object and

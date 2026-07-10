@@ -212,7 +212,8 @@ wf_target_propensity <- function(online, reference, formula,
 #'   `"kernel"` / `"matching"` are reserved.
 #' @param stabilize Use stabilized IPW (`pi_bar / phat`) to tame extreme weights.
 #' @param trim Optional positive scalar: clamp weights above `trim * median(w)`.
-#' @return A `wf_weights` object with `$overlap` and `$balance` diagnostics.
+#' @return A `wf_propensity_weights` object inheriting from `wf_weights`, with
+#'   `$overlap` and `$balance` diagnostics.
 #' @export
 wf_propensity <- function(target,
                           weight = c("ipw", "kernel", "matching"),
@@ -326,6 +327,8 @@ wf_propensity <- function(target,
     threshold = boundary,
     online = stats::quantile(p_on, probs, names = TRUE),
     reference = stats::quantile(p_ref, probs, names = TRUE),
+    online_values = unname(p_on),
+    reference_values = unname(p_ref),
     n_boundary = n_boundary,
     n_online = length(p_on)
   )
@@ -366,5 +369,5 @@ wf_propensity <- function(target,
       elapsed = as.numeric(Sys.time() - t0, units = "secs"),
       package_version = .wf_propensity_package_version()
     )
-  ), class = "wf_weights")
+  ), class = c("wf_propensity_weights", "wf_weights"))
 }

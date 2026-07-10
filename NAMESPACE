@@ -2,6 +2,11 @@
 
 S3method(as.data.frame,wf_quality_report)
 S3method(as.data.frame,wf_variance_result)
+S3method(plot,wf_auto_trim)
+S3method(plot,wf_blend_result)
+S3method(plot,wf_diagnostics)
+S3method(plot,wf_propensity_weights)
+S3method(plot,wf_weights)
 S3method(print,wf_auto_trim)
 S3method(print,wf_blend_result)
 S3method(print,wf_collapse_plan)
