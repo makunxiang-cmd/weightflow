@@ -40,7 +40,7 @@ remotes::install_github("makunxiang-cmd/WFC")
 或从源码压缩包安装：
 
 ```r
-install.packages("WFC_0.9.0.tar.gz", repos = NULL, type = "source")
+install.packages("WFC_0.9.1.tar.gz", repos = NULL, type = "source")
 ```
 
 ## 工作流概览

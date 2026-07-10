@@ -1,6 +1,6 @@
 Package: WFC
 Title: Workflow-Oriented Survey Weight Calibration
-Version: 0.9.0
+Version: 0.9.1
 Authors@R: person(given = "Kunxiang", family = "Ma", email = "mkx07080412@gmail.com", role = c("aut", "cre"))
 Author: Kunxiang Ma [aut, cre]
 Maintainer: Kunxiang Ma <mkx07080412@gmail.com>
@@ -19,6 +19,11 @@ Imports:
 Roxygen: list(markdown = TRUE)
 LazyData: true
 Suggests:
+    covr,
+    knitr,
+    rmarkdown,
+    survey,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0

@@ -92,8 +92,9 @@ wf_precheck <- function(sample, target, id = NULL,
     )
   }
 
-  s_only <- setdiff(unique(gkey), names(target$groups))
-  t_only <- setdiff(names(target$groups), unique(gkey))
+  sample_groups <- unique(gkey[!is.na(gkey)])
+  s_only <- setdiff(sample_groups, names(target$groups))
+  t_only <- setdiff(names(target$groups), sample_groups)
   if (length(s_only) > 0) {
     iss[[length(iss) + 1]] <- .wf_issue(
       "*",
@@ -153,8 +154,8 @@ wf_precheck <- function(sample, target, id = NULL,
     )
   }
 
-  for (g in intersect(names(target$groups), unique(gkey))) {
-    sel <- gkey == g
+  for (g in intersect(names(target$groups), sample_groups)) {
+    sel <- !is.na(gkey) & gkey == g
     n_g <- sum(sel)
     for (d in dvars) {
       v <- .chr(sample[[d]][sel])
